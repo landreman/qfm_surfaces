@@ -1,0 +1,6 @@
+&qfm_surfaces
+ stellarator_symmetry=.t.
+ N_phi_axis = 15
+ amplitude_m1 = 0.1d+0
+ amplitude_m2 = 0.25d+0
+/

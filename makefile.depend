@@ -1,0 +1,20 @@
+# -*- mode: makefile -*-
+
+OBJ_FILES = qfm_surfaces.o \
+	qfm_surfaces_compute_axis.o \
+	qfm_surfaces_compute_B.o \
+	qfm_surfaces_differentiation_matrix.o \
+	qfm_surfaces_read_input.o \
+	qfm_surfaces_validate_input.o \
+	qfm_surfaces_variables.o
+#	qfm_surfaces_write_output.o
+
+# Dependencies:
+qfm_surfaces.o: qfm_surfaces_variables.o
+qfm_surfaces_compute_axis.o: qfm_surfaces_variables.o
+qfm_surfaces_compute_B.o: qfm_surfaces_variables.o
+qfm_surfaces_differentiation_matrix.o: 
+qfm_surfaces_read_input.o: qfm_surfaces_variables.o
+qfm_surfaces_validate_input.o: qfm_surfaces_variables.o
+qfm_surfaces_variables.o:
+#qfm_surfaces_write_output.o: qfm_surfaces_variables.o

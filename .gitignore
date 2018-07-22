@@ -1,0 +1,12 @@
+*.o
+*.mod
+*.a
+qfm_surfaces
+*.nc
+qfm_surfaces_out*
+out*
+job.out.*
+job.err.*
+make_test.o*
+*~
+\#*
