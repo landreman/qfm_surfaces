@@ -21,7 +21,7 @@ program qfm_surfaces
 
   if (proc0) then
      print "(a)"," -------------------------------------------------------------"
-     print *,"Qfm_surfaces solver"
+     print *,"Computing quadratic-flux-minimizing surfaces."
   end if
   !call system_clock(tic,countrate)
   call cpu_time(start_time)
@@ -36,6 +36,8 @@ program qfm_surfaces
 
   call qfm_surfaces_compute_axis()
 
+  call qfm_surfaces_volume_scan()
+
   !call system_clock(toc)
   !total_time = real(toc-tic)/countrate
   call cpu_time(end_time)
@@ -45,7 +47,7 @@ program qfm_surfaces
 
   if (proc0) then
      print "(a)"," -------------------------------------------------------------"
-     print "(a,es10.3,a)","Qfm_surfaces solver is complete. Total time=",total_time," sec."
+     print "(a,es10.3,a)"," QFM-surfaces solver is complete. Total time=",total_time," sec."
   end if
 
   call mpi_finalize(ierr)

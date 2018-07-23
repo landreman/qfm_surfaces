@@ -63,7 +63,7 @@ subroutine qfm_surfaces_compute_axis
   call qfm_surfaces_axis_residual()
   initial_residual_norm = sqrt(sum(residual * residual))
   residual_norm = initial_residual_norm
-  print "(a,es10.3)","                    Initial residual norm:",residual_norm
+  print "(a,es10.3)","                 Initial residual L2 norm:",residual_norm
 
   ! Here is the main Newton iteration:
   Newton: do iteration = 1, N_iterations_axis
