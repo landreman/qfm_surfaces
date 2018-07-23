@@ -25,6 +25,12 @@ subroutine qfm_surfaces_single_solve(j_volume)
   real(dp), dimension(:,:), allocatable :: d2Xdtheta2_base, d2Ydtheta2_base, d2Zdtheta2_base, d2Xdphi2_base, d2Ydphi2_base, d2Zdphi2_base
   real(dp), dimension(:,:), allocatable :: d2Xdthetadphi_base, d2Ydthetadphi_base, d2Zdthetadphi_base
   real(dp), parameter :: epsilon = 1.0d-7
+  integer, parameter :: normal_vector_sign = -1
+  real(dp), dimension(:,:), allocatable :: B_R, B_phi, B_Z, B_X, B_Y, NX, NY, NZ, NR, normal_X, normal_Y, normal_Z, Bnormal, norm_normal
+  real(dp), dimension(:,:), allocatable :: fundamental_form_E, fundamental_form_F, fundamental_form_G, fundamental_form_L, fundamental_form_M, fundamental_form_N
+  real(dp), dimension(:,:), allocatable :: mean_curvature, shape_gradient, B_dot_e_theta, B_dot_e_phi, N_dot_B_cross_e_zeta, N_dot_e_theta_cross_B
+  real(dp), dimension(:,:), allocatable :: d_Bnormal_d_theta, d_Bnormal_d_phi, integrand
+  real(dp), dimension(:), allocatable :: phi_copied
 
   volume_target = volumes(j_volume)
   print "(a,i5,a,i5,a)"," Solving for volume",j_volume," of",N_volumes,"."
@@ -119,6 +125,37 @@ subroutine qfm_surfaces_single_solve(j_volume)
      allocate(d2Xdphi2_base(N_theta,N_phi))
      allocate(d2Ydphi2_base(N_theta,N_phi))
      allocate(d2Zdphi2_base(N_theta,N_phi))
+
+     allocate(B_R(N_theta,N_phi))
+     allocate(B_phi(N_theta,N_phi))
+     allocate(B_Z(N_theta,N_phi))
+     allocate(B_X(N_theta,N_phi))
+     allocate(B_Y(N_theta,N_phi))
+     allocate(NX(N_theta,N_phi))
+     allocate(NY(N_theta,N_phi))
+     allocate(NZ(N_theta,N_phi))
+     allocate(NR(N_theta,N_phi))
+     allocate(normal_X(N_theta,N_phi))
+     allocate(normal_Y(N_theta,N_phi))
+     allocate(normal_Z(N_theta,N_phi))
+     allocate(Bnormal(N_theta,N_phi))
+     allocate(norm_normal(N_theta,N_phi))
+     allocate(fundamental_form_E(N_theta,N_phi))
+     allocate(fundamental_form_F(N_theta,N_phi))
+     allocate(fundamental_form_G(N_theta,N_phi))
+     allocate(fundamental_form_L(N_theta,N_phi))
+     allocate(fundamental_form_M(N_theta,N_phi))
+     allocate(fundamental_form_N(N_theta,N_phi))
+     allocate(mean_curvature(N_theta,N_phi))
+     allocate(shape_gradient(N_theta,N_phi))
+     allocate(B_dot_e_theta(N_theta,N_phi))
+     allocate(B_dot_e_phi(N_theta,N_phi))
+     allocate(N_dot_B_cross_e_zeta(N_theta,N_phi))
+     allocate(N_dot_e_theta_cross_B(N_theta,N_phi))
+     allocate(d_Bnormal_d_theta(N_theta,N_phi))
+     allocate(d_Bnormal_d_phi(N_theta,N_phi))
+     allocate(integrand(N_theta,N_phi))
+     allocate(phi_copied(N_theta))
 
 
      ! Evaluate the contribution to the surface shape from the axis, and its derivatives:
@@ -286,6 +323,10 @@ subroutine qfm_surfaces_single_solve(j_volume)
      deallocate(dXdtheta_base,dYdtheta_base,dZdtheta_base,dXdphi_base,dYdphi_base,dZdphi_base)
      deallocate(d2Xdtheta2_base,d2Ydtheta2_base,d2Zdtheta2_base,d2Xdphi2_base,d2Ydphi2_base,d2Zdphi2_base)
      deallocate(d2Xdthetadphi_base,d2Ydthetadphi_base,d2Zdthetadphi_base)
+     deallocate(B_R, B_phi, B_Z, B_X, B_Y, NX, NY, NZ, NR, normal_X, normal_Y, normal_Z, Bnormal, norm_normal)
+     deallocate(fundamental_form_E, fundamental_form_F, fundamental_form_G, fundamental_form_L, fundamental_form_M, fundamental_form_N)
+     deallocate(mean_curvature, shape_gradient, B_dot_e_theta, B_dot_e_phi, N_dot_B_cross_e_zeta, N_dot_e_theta_cross_B)
+     deallocate(d_Bnormal_d_theta, d_Bnormal_d_phi, integrand, phi_copied)
 
   end do ! Loop over resolution
   deallocate(last_xm, last_xn, last_state_vector)
@@ -302,13 +343,17 @@ contains
     integer :: j
 
     residual0 = residual
+    state_vector0 = state_vector
 
     do j = 1, vector_size
+       if (j==vector_size) state_vector(vector_size) = state_vector(vector_size) + epsilon
+       ! Aside from the last column, the perturbations to the state vector are handled inside qfm_surfaces_residual for the sake of speed.
        call qfm_surfaces_residual(j)
        Jacobian(:,j) = (residual - residual0) / epsilon
     end do
 
     residual = residual0
+    state_vector = state_vector0
 
   end subroutine qfm_surfaces_Jacobian
 
@@ -324,7 +369,7 @@ contains
     integer :: itheta, iphi
     real(dp) :: amnc, d_cosangle_dtheta, d_cosangle_dzeta, d2_cosangle_dtheta2, d2_cosangle_dzeta2, d2_cosangle_dtheta_dzeta
 
-    computing_Jacobian = (Jacobian_column < 1)
+    computing_Jacobian = (Jacobian_column > 0)
 
     if (computing_Jacobian) then
        ! Initialize arrays to the base case
@@ -348,6 +393,7 @@ contains
        d2Ydphi2 = d2Ydphi2_base
        d2Zdphi2 = d2Zdphi2_base
        mnmax_to_use = 1
+       if (Jacobian_column == vector_size) mnmax_to_use = 0 ! If perturbing the Lagrange multiplier lambda
     else
        ! We are not computing the finite-difference Jacobian
        !X = 0
@@ -459,50 +505,56 @@ contains
     end if
 
     do iphi = 1, N_phi
+       phi_copied = phi(iphi)
        call qfm_surfaces_compute_B(N_theta,B_R(:,iphi), B_phi(:,iphi), B_Z(:,iphi), R(:,iphi), phi_copied, Z(:,iphi))
+       B_X(:,iphi) = B_R(:,iphi) * cos_phi(iphi) - B_phi(:,iphi) * sin_phi(iphi)
+       B_Y(:,iphi) = B_R(:,iphi) * sin_phi(iphi) + B_phi(:,iphi) * cos_phi(iphi)
     end do
-    BX = BR .* coszeta - Bzeta .* sinzeta;
-    BY = BR .* sinzeta + Bzeta .* coszeta;
         
-    NX = normal_vector_sign * (dYdtheta .* dZdzeta - dYdzeta .* dZdtheta);
-    NY = normal_vector_sign * (dZdtheta .* dXdzeta - dZdzeta .* dXdtheta);
-    NZ = normal_vector_sign * (dXdtheta .* dYdzeta - dXdzeta .* dYdtheta);
-    NR = NX .* coszeta + NY .* sinzeta;
+    NX = normal_vector_sign * (dYdtheta * dZdzeta - dYdzeta * dZdtheta)
+    NY = normal_vector_sign * (dZdtheta * dXdzeta - dZdzeta * dXdtheta)
+    NZ = normal_vector_sign * (dXdtheta * dYdzeta - dXdzeta * dYdtheta)
+    do iphi = 1, N_phi
+       NR(:,iphi) = NX(:,iphi) * cosphi(iphi) + NY(:,iphi) * sinphi(iphi)
+    end do
         
-    norm_normal = sqrt(NX.*NX + NY.*NY + NZ.*NZ);
-    nX = NX ./ norm_normal;
-    nY = NY ./ norm_normal;
-    nZ = NZ ./ norm_normal;
+    norm_normal = sqrt(NX*NX + NY*NY + NZ*NZ)
+    normal_X = NX / norm_normal
+    normal_Y = NY / norm_normal
+    normal_Z = NZ / norm_normal
         
-    Bnormal = BX .* nX + BY .* nY + BZ .* nZ;
+    Bnormal = B_X * normal_X + B_Y * normal_Y + B_Z * normal_Z
         
-    E = dXdtheta .* dXdtheta + dYdtheta .* dYdtheta + dZdtheta .* dZdtheta;
-    F = dXdtheta .* dXdzeta  + dYdtheta .* dYdzeta  + dZdtheta .* dZdzeta;
-    G = dXdzeta  .* dXdzeta  + dYdzeta  .* dYdzeta  + dZdzeta  .* dZdzeta;
+    fundamental_form_E = dXdtheta * dXdtheta + dYdtheta * dYdtheta + dZdtheta * dZdtheta
+    fundamental_form_F = dXdtheta * dXdzeta  + dYdtheta * dYdzeta  + dZdtheta * dZdzeta
+    fundamental_form_G = dXdzeta  * dXdzeta  + dYdzeta  * dYdzeta  + dZdzeta  * dZdzeta
         
-    L = d2Xdtheta2     .* nX + d2Ydtheta2     .* nY + d2Zdtheta2     .* nZ;
-    M = d2Xdthetadzeta .* nX + d2Ydthetadzeta .* nY + d2Zdthetadzeta .* nZ;
-    N = d2Xdzeta2      .* nX + d2Ydzeta2      .* nY + d2Zdzeta2      .* nZ;
+    fundamental_form_L = d2Xdtheta2     * normal_X + d2Ydtheta2     * normal_Y + d2Zdtheta2     * normal_Z
+    fundamental_form_M = d2Xdthetadzeta * normal_X + d2Ydthetadzeta * normal_Y + d2Zdthetadzeta * normal_Z
+    fundamental_form_N = d2Xdzeta2      * normal_X + d2Ydzeta2      * normal_Y + d2Zdzeta2      * normal_Z
         
-    mean_curvature = (E.*N + G.*L - 2*F.*M) ./ (2*(E.*G - F.*F));
+    mean_curvature = (fundamental_form_E * fundamental_form_N + fundamental_form_G * fundamental_form_L - 2  * fundamental_form_F * fundamental_form_M) &
+         / (2*(fundamental_form_E * fundamental_form_G - fundamental_form_F * fundamental_form_F))
         
     ! For the next few lines, see note 20180712-01.
-    B_dot_e_theta = BX .* dXdtheta + BY .* dYdtheta + BZ .* dZdtheta;
-    B_dot_e_zeta  = BX .* dXdzeta  + BY .* dYdzeta  + BZ .* dZdzeta;
+    B_dot_e_theta = B_X * dXdtheta + B_Y * dYdtheta + B_Z * dZdtheta
+    B_dot_e_zeta  = B_X * dXdzeta  + B_Y * dYdzeta  + B_Z * dZdzeta
         
-    N_dot_B_cross_e_zeta  = normal_vector_sign * (B_dot_e_theta .* G - B_dot_e_zeta  .* F);
-    N_dot_e_theta_cross_B = normal_vector_sign * (B_dot_e_zeta  .* E - B_dot_e_theta .* F);
+    N_dot_B_cross_e_zeta  = normal_vector_sign * (B_dot_e_theta * fundamental_form_G - B_dot_e_zeta  * fundamental_form_F)
+    N_dot_e_theta_cross_B = normal_vector_sign * (B_dot_e_zeta  * fundamental_form_E - B_dot_e_theta * fundamental_form_F)
+
+    ! Use BLAS here for speed?
+    d_Bnormal_d_theta = matmul(ddtheta,Bnormal)
+    d_Bnormal_d_zeta  = transpose(matmul(ddzeta,transpose(Bnormal)))
         
-    d_Bnormal_d_theta = ddtheta * Bnormal;
-    d_Bnormal_d_zeta  = (ddzeta * (Bnormal'))';
-        
-    shape_gradient = mean_curvature .* Bnormal .* Bnormal &
-         + normal_vector_sign * (N_dot_B_cross_e_zeta .* d_Bnormal_d_theta + N_dot_e_theta_cross_B .* d_Bnormal_d_zeta) ./ (norm_normal .* norm_normal);
+    shape_gradient = mean_curvature * Bnormal * Bnormal &
+         + normal_vector_sign * (N_dot_B_cross_e_zeta * d_Bnormal_d_theta + N_dot_e_theta_cross_B * d_Bnormal_d_zeta) / (norm_normal * norm_normal)
 
     residual = 0
         
-    integrand = (shape_gradient + vec(end)) .* norm_normal;
+    integrand = (shape_gradient + state_vector(vector_size)) * norm_normal
     do imn = 1,mnmax
+       ! Need to add explicit theta + phi loops here
        angle = xm(imn) * theta2D - xn(imn) * zeta2D;
        residual(imn) = dtheta * dzeta * nfp * sum(sum(integrand .* cos(angle)));
     end do
