@@ -5,7 +5,7 @@ subroutine qfm_surfaces_single_solve(j_volume)
   implicit none
 
   integer, intent(in) :: j_volume
-  integer :: j_resolution, m, n, j, k
+  integer :: j_resolution, m, n, j, k, imn
   integer :: N_theta, N_phi, mpol, ntor
   real(dp), dimension(:), allocatable :: theta, phi, temp_1D
   real(dp), dimension(:,:), allocatable :: ddtheta, ddphi, temp_2D, Jacobian
@@ -21,7 +21,7 @@ subroutine qfm_surfaces_single_solve(j_volume)
   real(dp), dimension(:,:), allocatable :: Z, R, dXdtheta, dYdtheta, dZdtheta, dXdphi, dYdphi, dZdphi
   real(dp), dimension(:,:), allocatable :: d2Xdtheta2, d2Ydtheta2, d2Zdtheta2, d2Xdphi2, d2Ydphi2, d2Zdphi2
   real(dp), dimension(:,:), allocatable :: d2Xdthetadphi, d2Ydthetadphi, d2Zdthetadphi
-  real(dp), dimension(:,:), allocatable :: X_base, Y_base, Z_base, R_base, dXdtheta_base, dYdtheta_base, dZdtheta_base, dXdphi_base, dYdphi_base, dZdphi_base
+  real(dp), dimension(:,:), allocatable :: Z_base, R_base, dXdtheta_base, dYdtheta_base, dZdtheta_base, dXdphi_base, dYdphi_base, dZdphi_base
   real(dp), dimension(:,:), allocatable :: d2Xdtheta2_base, d2Ydtheta2_base, d2Zdtheta2_base, d2Xdphi2_base, d2Ydphi2_base, d2Zdphi2_base
   real(dp), dimension(:,:), allocatable :: d2Xdthetadphi_base, d2Ydthetadphi_base, d2Zdthetadphi_base
   real(dp), parameter :: epsilon = 1.0d-7
@@ -34,6 +34,7 @@ subroutine qfm_surfaces_single_solve(j_volume)
   integer :: iteration, j_line_search
   real(dp) :: residual_norm, initial_residual_norm, last_residual_norm, step_scale
   logical :: verbose = .true.
+  real :: start_time, end_time
 
   ! Variables needed by LAPACK:                                                                                            
   integer :: INFO
@@ -63,7 +64,7 @@ subroutine qfm_surfaces_single_solve(j_volume)
      allocate(temp_1D(N_phi))
      allocate(ddphi(N_phi,N_phi))
      allocate(temp_2D(N_phi,N_phi))
-     call qfm_surfaces_differentiation_matrix(N_phi, 0.0d+0, 2*pi, 20, 1, phi, temp_1D, ddphi, temp_2D)
+     call qfm_surfaces_differentiation_matrix(N_phi, 0.0d+0, 2*pi/nfp, 20, 1, phi, temp_1D, ddphi, temp_2D)
      deallocate(temp_1D)
      deallocate(temp_2D)
      dphi = phi(2) - phi(1)
@@ -225,6 +226,7 @@ subroutine qfm_surfaces_single_solve(j_volume)
      allocate(residual0(vector_size))
      allocate(Jacobian(vector_size,vector_size))
      allocate(step_direction(vector_size))
+     allocate(IPIV(vector_size))
      state_vector = 0
      if (j_resolution==1) then
         state_vector(1) = sqrt(volume_target/(2*pi*(sum(R0)/N_phi)*pi))
@@ -256,12 +258,12 @@ subroutine qfm_surfaces_single_solve(j_volume)
            end if
         end do
         state_vector(vector_size) = last_state_vector(last_vector_size)
-        print *,"last_xm:",last_xm
-        print *,"     xm:",xm
-        print *,"last_xn:",last_xn
-        print *,"     xn:",xn
-        print *,"last_state_vector:",last_state_vector
-        print *,"     state_vector:",state_vector
+!!$        print *,"last_xm:",last_xm
+!!$        print *,"     xm:",xm
+!!$        print *,"last_xn:",last_xn
+!!$        print *,"     xn:",xn
+!!$        print *,"last_state_vector:",last_state_vector
+!!$        print *,"     state_vector:",state_vector
         
         deallocate(last_xm, last_xn, last_state_vector)
      end if
@@ -271,8 +273,8 @@ subroutine qfm_surfaces_single_solve(j_volume)
      initial_residual_norm = sqrt(sum(residual * residual))
      residual_norm = initial_residual_norm
      print "(a,es10.3)","                 Initial residual L2 norm:",residual_norm
-     print *,"residual:",residual
-     return
+     !print *,"residual:",residual
+     !return
 
      ! Here is the main Newton iteration:
      Newton: do iteration = 1, N_iterations
@@ -289,7 +291,10 @@ subroutine qfm_surfaces_single_solve(j_volume)
         ! We will use the LAPACK subroutine DGESV to solve a general (asymmetric) linear system
         ! step_direction = - matrix \ residual
         step_direction = -residual ! Note that LAPACK will over-write step_direction and with the solution, and over-write Jacobian with the LU factorization.
+        call cpu_time(start_time)
         call DGESV(vector_size, 1, Jacobian, vector_size, IPIV, step_direction, vector_size, INFO)
+        call cpu_time(end_time)
+        print *,"Time for DGESV:",end_time-start_time
         if (INFO /= 0) then
            print *, "Error in LAPACK call DGESV: info = ", INFO
            stop
@@ -299,7 +304,10 @@ subroutine qfm_surfaces_single_solve(j_volume)
         line_search: do j_line_search = 1, N_line_search
            state_vector = state_vector0 + step_scale * step_direction
            
+           call cpu_time(start_time)
            call qfm_surfaces_residual(0)
+           call cpu_time(end_time)
+           print *,"Time to compute residual:",end_time-start_time
            residual_norm = sqrt(sum(residual * residual))
            !if (verbose) print "(a,i3,a,es10.3,a,es23.15)","    Line search step",j_line_search,"  Relative residual L2 norm:",residual_norm / initial_residual_norm,"  iota:",iota
            if (verbose) print "(a,i3,a,es10.3,a,es23.15)","    Line search step",j_line_search,"  Residual L2 norm:",residual_norm
@@ -326,16 +334,21 @@ subroutine qfm_surfaces_single_solve(j_volume)
      last_xm = xm
      last_xn = xn
 
+     do imn = 1, mnmax
+        amnc_final(xm(imn), xn(imn), j_volume) = state_vector(imn)
+     end do
+     lambda(j_volume) = state_vector(vector_size)
+
      ! Done with this resolution. Deallocate everything.
      deallocate(phi, ddphi, theta, ddtheta)
      deallocate(R0, d_R0_d_phi, d2_R0_d_phi2, Z0, d_Z0_d_phi, d2_Z0_d_phi2)
-     deallocate(xm, xn, state_vector, state_vector0, residual, residual0, Jacobian, step_direction)
+     deallocate(xm, xn, state_vector, state_vector0, residual, residual0, Jacobian, step_direction, IPIV)
      deallocate(sin_m_theta, cos_m_theta, sin_n_phi, cos_n_phi, sin_phi, cos_phi, sin_theta, cos_theta)
      deallocate(Z,R)
      deallocate(dXdtheta,dYdtheta,dZdtheta,dXdphi,dYdphi,dZdphi)
      deallocate(d2Xdtheta2,d2Ydtheta2,d2Zdtheta2,d2Xdphi2,d2Ydphi2,d2Zdphi2)
      deallocate(d2Xdthetadphi,d2Ydthetadphi,d2Zdthetadphi)
-     deallocate(X_base,Y_base,Z_base,R_base)
+     deallocate(Z_base,R_base)
      deallocate(dXdtheta_base,dYdtheta_base,dZdtheta_base,dXdphi_base,dYdphi_base,dZdphi_base)
      deallocate(d2Xdtheta2_base,d2Ydtheta2_base,d2Zdtheta2_base,d2Xdphi2_base,d2Ydphi2_base,d2Zdphi2_base)
      deallocate(d2Xdthetadphi_base,d2Ydthetadphi_base,d2Zdthetadphi_base)
@@ -357,7 +370,9 @@ contains
     implicit none
 
     integer :: j
+    real :: start_time, end_time
 
+    call cpu_time(start_time)
     residual0 = residual
     state_vector0 = state_vector
 
@@ -370,6 +385,8 @@ contains
 
     residual = residual0
     state_vector = state_vector0
+    call cpu_time(end_time)
+    print *,"Time to compute finite-difference Jacobian:",end_time-start_time
 
   end subroutine qfm_surfaces_Jacobian
 
@@ -385,8 +402,8 @@ contains
     integer :: itheta, iphi
     real(dp) :: amnc, d_cosangle_dtheta, d_cosangle_dphi, d2_cosangle_dtheta2, d2_cosangle_dphi2, d2_cosangle_dtheta_dphi
 
-    print "(a,i3)","Entering qfm_surfaces_residual. Jacobian_column=",Jacobian_column
-    print *,"state_vector:",state_vector
+    !print "(a,i3)","Entering qfm_surfaces_residual. Jacobian_column=",Jacobian_column
+    !print *,"state_vector:",state_vector
     computing_Jacobian = (Jacobian_column > 0)
 
     if (computing_Jacobian) then
@@ -441,16 +458,17 @@ contains
           R(itheta,:) = R0
           dXdphi(itheta,:) = d_R0_d_phi * cos_phi + R0 * (-sin_phi)
           dYdphi(itheta,:) = d_R0_d_phi * sin_phi + R0 * cos_phi
-          dXdphi(itheta,:) = d_Z0_d_phi
+          dZdphi(itheta,:) = d_Z0_d_phi
           d2Xdphi2(itheta,:) = d2_R0_d_phi2 * cos_phi + 2 * d_R0_d_phi * (-sin_phi) + R0 * (-cos_phi)
           d2Ydphi2(itheta,:) = d2_R0_d_phi2 * sin_phi + 2 * d_R0_d_phi * cos_phi + R0 * (-sin_phi)
+          d2Zdphi2(itheta,:) = d2_Z0_d_phi2
        end do
        mnmax_to_use = mnmax
     end if
     
-    print *,"R0:",R0
-    print *,"Z0:",Z0
-    print *,"cos_theta:",cos_theta
+    !print *,"R0:",R0
+    !print *,"Z0:",Z0
+    !print *,"cos_theta:",cos_theta
 
     do imn = 1, mnmax_to_use
        if (computing_Jacobian) then
@@ -462,14 +480,13 @@ contains
           n = xn(imn)
           amnc = state_vector(imn)
        end if
-       print *,"imn=",imn,"amnc=",amnc
+       !print *,"imn=",imn,"amnc=",amnc
        do iphi = 1, N_phi
           do itheta = 1, N_theta
              !sinangle = sin(m*theta-n*phi) = sin(m*theta) * cos(n*phi) - cos(m*theta) * sin(n*phi)
              sinangle = sin_m_theta(itheta,m) * cos_n_phi(iphi,n) - cos_m_theta(itheta,m) * sin_n_phi(iphi,n)
              !cosangle = cos(m*theta-n*phi) = cos(m*theta) * cos(n*phi) + sin(m*theta) * sin(n*phi)
              cosangle = cos_m_theta(itheta,m) * cos_n_phi(iphi,n) + sin_m_theta(itheta,m) * sin_n_phi(iphi,n)
-             print *,"cosangle:",cosangle
 
              d_cosangle_dtheta = -m*sinangle
              d_cosangle_dphi  =  n*nfp*sinangle
@@ -506,9 +523,9 @@ contains
        end do
     end do
 
-    print *,"End of big imn loop"
-    print *,"R:",R
-    print *,"Z:",Z
+    !print *,"End of big imn loop"
+    !print *,"R:",R
+    !print *,"Z:",Z
 
     if (.not. computing_Jacobian) then
        !X_base = X
@@ -539,9 +556,9 @@ contains
        B_Y(:,iphi) = B_R(:,iphi) * sin_phi(iphi) + B_phi(:,iphi) * cos_phi(iphi)
     end do
 
-    print *,"B_R:",B_R
-    print *,"B_phi:",B_phi
-    print *,"B_Z:",B_Z
+    !print *,"B_R:",B_R
+    !print *,"B_phi:",B_phi
+    !print *,"B_Z:",B_Z
         
     NX = normal_vector_sign * (dYdtheta * dZdphi - dYdphi * dZdtheta)
     NY = normal_vector_sign * (dZdtheta * dXdphi - dZdphi * dXdtheta)
@@ -549,13 +566,23 @@ contains
     do iphi = 1, N_phi
        NR(:,iphi) = NX(:,iphi) * cos_phi(iphi) + NY(:,iphi) * sin_phi(iphi)
     end do
+    !print *,"NX:",NX
+    !print *,"NY:",NY
+    !print *,"NZ:",NZ
+    !print *,"dXdtheta:",dXdtheta
+    !print *,"dZdtheta:",dZdtheta
+    !print *,"dXdphi:",dXdphi
+    !print *,"dZdphi:",dZdphi
         
     norm_normal = sqrt(NX*NX + NY*NY + NZ*NZ)
     normal_X = NX / norm_normal
     normal_Y = NY / norm_normal
     normal_Z = NZ / norm_normal
+    !print *,"norm_normal:",norm_normal
+    !print *,"normal_X:",normal_X
         
     Bnormal = B_X * normal_X + B_Y * normal_Y + B_Z * normal_Z
+    !print *,"Bnormal:",Bnormal
         
     fundamental_form_E = dXdtheta * dXdtheta + dYdtheta * dYdtheta + dZdtheta * dZdtheta
     fundamental_form_F = dXdtheta * dXdphi  + dYdtheta * dYdphi  + dZdtheta * dZdphi
@@ -567,6 +594,8 @@ contains
         
     mean_curvature = (fundamental_form_E * fundamental_form_N + fundamental_form_G * fundamental_form_L - 2  * fundamental_form_F * fundamental_form_M) &
          / (2*(fundamental_form_E * fundamental_form_G - fundamental_form_F * fundamental_form_F))
+
+    !print *,"mean_curvature:",mean_curvature
         
     ! For the next few lines, see note 20180712-01.
     B_dot_e_theta = B_X * dXdtheta + B_Y * dYdtheta + B_Z * dZdtheta

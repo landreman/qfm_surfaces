@@ -42,7 +42,7 @@ module qfm_surfaces_variables
   integer :: N_iterations = 20
   integer :: N_line_search = 5
   real(dp) :: Newton_tolerance = 1.0d-12
-  integer :: N_volumes = 5
+  integer :: N_volumes = 1
   real(dp) :: max_volume = 1
   integer :: max_mpol = 12
   integer :: max_ntor = 9
@@ -53,7 +53,8 @@ module qfm_surfaces_variables
   integer :: N_resolutions
   integer, dimension(:), allocatable :: mpols, ntors
   integer :: nmax_axis
-  real(dp), dimension(:), allocatable :: R0c, R0s, Z0c, Z0s
+  real(dp), dimension(:), allocatable :: R0c, R0s, Z0c, Z0s, lambda
+  real(dp), dimension(:,:,:), allocatable :: amnc_final
 
   namelist / qfm_surfaces / nfp, N_phi_axis, amplitude_m1, amplitude_m2, stellarator_symmetry, N_volumes, max_volume, max_mpol, max_ntor, min_accurate_quadratic_flux, &
        min_N_theta, min_N_phi, N_iterations, N_line_search, Newton_tolerance

@@ -8,8 +8,8 @@ OBJ_FILES = qfm_surfaces.o \
 	qfm_surfaces_single_solve.o \
 	qfm_surfaces_validate_input.o \
 	qfm_surfaces_variables.o \
-	qfm_surfaces_volume_scan.o
-#	qfm_surfaces_write_output.o
+	qfm_surfaces_volume_scan.o \
+	qfm_surfaces_write_output.o
 
 # Dependencies:
 qfm_surfaces.o: qfm_surfaces_variables.o
@@ -21,4 +21,4 @@ qfm_surfaces_single_solve.o: qfm_surfaces_variables.o
 qfm_surfaces_validate_input.o: qfm_surfaces_variables.o
 qfm_surfaces_variables.o:
 qfm_surfaces_volume_scan.o: qfm_surfaces_variables.o
-#qfm_surfaces_write_output.o: qfm_surfaces_variables.o
+qfm_surfaces_write_output.o: qfm_surfaces_variables.o

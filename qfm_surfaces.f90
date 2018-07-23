@@ -43,7 +43,7 @@ program qfm_surfaces
   call cpu_time(end_time)
   total_time = end_time - start_time
 
-  !call write_output()
+  call qfm_surfaces_write_output()
 
   if (proc0) then
      print "(a)"," -------------------------------------------------------------"

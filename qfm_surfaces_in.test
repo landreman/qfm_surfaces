@@ -3,4 +3,8 @@
  N_phi_axis = 15
  amplitude_m1 = 0.1d+0
  amplitude_m2 = 0.25d+0
+ N_volumes = 3
+
+ max_mpol = 3
+ max_ntor=2
 /

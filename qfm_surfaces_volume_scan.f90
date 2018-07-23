@@ -6,6 +6,9 @@ subroutine qfm_surfaces_volume_scan
 
   integer :: j_volume, j
 
+  allocate(amnc_final(0:max_mpol, -max_ntor:max_ntor, N_volumes))
+  amnc_final = 0
+
   N_resolutions = max(max_mpol, max_ntor)
   allocate(mpols(N_resolutions))
   allocate(ntors(N_resolutions))
@@ -17,6 +20,7 @@ subroutine qfm_surfaces_volume_scan
 
   allocate(volumes(N_volumes))
   allocate(quadratic_flux(N_volumes))
+  allocate(lambda(N_volumes))
 
   volumes = [( max_volume * sqrt((j_volume * 1.0d+0)/N_volumes), j_volume = 1, N_volumes )]
   print *,"Quadratic-flux-minimizing surfaces with the following volumes will be computed:"
