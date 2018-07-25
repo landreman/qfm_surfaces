@@ -18,7 +18,13 @@ subroutine qfm_surfaces_write_output
   ! Arrays with dimension 1
   character(len=*), parameter :: &
        vn_volumes = "volumes", &
-       vn_lambda = "lambda"
+       vn_lambda = "lambda", &
+       vn_R0c = "R0c", &
+       vn_R0s = "R0s", &
+       vn_Z0c = "Z0c", &
+       vn_Z0s = "Z0s", &
+       vn_xm = "xm", &
+       vn_xn = "xn"
 
   ! Arrays with dimension 2
   character(len=*), parameter :: &
@@ -26,7 +32,8 @@ subroutine qfm_surfaces_write_output
        vn_scan_R0c  = "scan_R0c", &
        vn_scan_R0s  = "scan_R0s", &
        vn_scan_Z0c  = "scan_Z0c", &
-       vn_scan_Z0s  = "scan_Z0s"
+       vn_scan_Z0s  = "scan_Z0s", &
+       vn_amnc = "amnc"
 
 !!$  ! Arrays with dimension 3
 !!$  character(len=*), parameter :: &
@@ -38,13 +45,15 @@ subroutine qfm_surfaces_write_output
 
   ! Arrays with dimension 1:
   character(len=*), parameter, dimension(1) :: &
-       N_volumes_dim = (/'N_volumes'/)
+       N_volumes_dim = (/'N_volumes'/), &
+       nmax_axis_plus_1_dim = (/'nmax_axis_plus_1'/), &
+       mnmax_dim = (/'mnmax'/)
 
   ! Arrays with dimension 2:
   ! The form of the array declarations here is inspired by
   ! http://stackoverflow.com/questions/21552430/gfortran-does-not-allow-character-arrays-with-varying-component-lengths
   character(len=*), parameter, dimension(2) :: &
-       max_axis_nmax_plus_1_4_dim = (/ character(len=50) :: 'max_axis_nmax_plus_1','4'/), &
+       mnmax_N_volumes_dim = (/ character(len=50) :: 'mnmax','N_volumes'/), &
        N_scan_max_axis_nmax_plus_1_dim = (/ character(len=50) :: 'N_scan','max_axis_nmax_plus_1'/)
 
 !!$  ! Arrays with dimension 3:
@@ -77,11 +86,17 @@ subroutine qfm_surfaces_write_output
 
   call cdf_define(ncid, vn_volumes, volumes, dimname=N_volumes_dim)
   call cdf_define(ncid, vn_lambda, lambda, dimname=N_volumes_dim)
+  call cdf_define(ncid, vn_R0c, R0c, dimname=nmax_axis_plus_1_dim)
+  call cdf_define(ncid, vn_R0s, R0s, dimname=nmax_axis_plus_1_dim)
+  call cdf_define(ncid, vn_Z0c, Z0c, dimname=nmax_axis_plus_1_dim)
+  call cdf_define(ncid, vn_Z0s, Z0s, dimname=nmax_axis_plus_1_dim)
+  call cdf_define(ncid, vn_xm, xm, dimname=mnmax_dim)
+  call cdf_define(ncid, vn_xn, xn, dimname=mnmax_dim)
 
 
   ! Arrays with dimension 2
 
-!!$  call cdf_define(ncid, vn_N_scan_array,  N_scan_array, dimname=max_axis_nmax_plus_1_4_dim)
+  call cdf_define(ncid, vn_amnc,  amnc, dimname=mnmax_N_volumes_dim)
 !!$  call cdf_define(ncid, vn_scan_R0c,  scan_R0c, dimname=N_scan_max_axis_nmax_plus_1_dim)
 !!$  call cdf_define(ncid, vn_scan_R0s,  scan_R0s, dimname=N_scan_max_axis_nmax_plus_1_dim)
 !!$  call cdf_define(ncid, vn_scan_Z0c,  scan_Z0c, dimname=N_scan_max_axis_nmax_plus_1_dim)
@@ -104,10 +119,16 @@ subroutine qfm_surfaces_write_output
 
   call cdf_write(ncid, vn_volumes, volumes)
   call cdf_write(ncid, vn_lambda, lambda)
+  call cdf_write(ncid, vn_R0c, R0c)
+  call cdf_write(ncid, vn_R0s, R0s)
+  call cdf_write(ncid, vn_Z0c, Z0c)
+  call cdf_write(ncid, vn_Z0s, Z0s)
+  call cdf_Write(ncid, vn_xm, xm)
+  call cdf_Write(ncid, vn_xn, xn)
 
   ! Arrays with dimension 2
 
-  !call cdf_write(ncid, vn_N_scan_array,  N_scan_array)
+  call cdf_write(ncid, vn_amnc,  amnc)
 
   ! Arrays with dimension 3
 

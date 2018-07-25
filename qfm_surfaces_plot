@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+
+import numpy as np
+from scipy.io import netcdf
+import sys, os
+
+print "Usage: "+__file__+" qfm_surfaces_out.*.nc"
+
+if len(sys.argv) != 2:
+    print "Error! You must specify 1 argument: the qfm_surfaces_out.*.nc file"
+    exit(1)
+
+filename = sys.argv[1]
+print "Reading filename "+filename
+f = netcdf.netcdf_file(filename,mode='r',mmap=False)
+
+N_volumes = f.variables['N_volumes'][()]
+nfp = f.variables['nfp'][()]
+R0c = f.variables['R0c'][()]
+Z0s = f.variables['Z0s'][()]
+xm = f.variables['xm'][()]
+xn = f.variables['xn'][()]
+amnc = f.variables['amnc'][()]
+print "amnc.shape:",amnc.shape
+
+f.close()
+
+phi = np.linspace(0,2*np.pi/nfp,4,endpoint=False)
+R = np.zeros(4)
+Z = np.zeros(4)
+for n in range(len(R0c)):
+    R += R0c[n] * np.cos(n*nfp*phi)
+    Z += Z0s[n] * np.sin(n*nfp*phi)
+
+N_theta = 100
+theta = np.linspace(0,2*np.pi,N_theta)
+phi2D, theta2D = np.meshgrid(phi,theta)
+print "phi2D.shape:",phi2D.shape
+Rs = np.zeros((N_theta,4,N_volumes))
+Zs = np.zeros((N_theta,4,N_volumes))
+a = np.zeros((N_theta,4,N_volumes))
+
+for j_volume in range(N_volumes):
+    for jmn in range(len(xm)):
+        a[:,:,j_volume] += amnc[j_volume,jmn]*np.cos(xm[jmn]*theta2D-nfp*xn[jmn]*phi2D)
+    for j in range(4):
+        Rs[:,j,j_volume] = R[j]
+        Zs[:,j,j_volume] = Z[j]
+    Rs[:,:,j_volume] += a[:,:,j_volume] * np.cos(theta2D)
+    Zs[:,:,j_volume] += a[:,:,j_volume] * np.sin(theta2D)
+
+
+zmax = np.max(np.abs(Zs))
+print "zmax:",zmax
+
+import matplotlib.pyplot as plt
+
+fig = plt.figure(figsize=(16,7))
+fig.patch.set_facecolor('white')
+
+numRows = 2
+numCols = 2
+
+for jphi in range(4):
+    plt.subplot(numRows,numCols,jphi+1)
+    plt.plot(R[jphi],Z[jphi],'+k')
+    for j_volume in range(N_volumes):
+        plt.plot(Rs[:,jphi,j_volume], Zs[:,jphi,j_volume],'.-')
+    plt.xlabel('R')
+    plt.ylabel('Z')
+    plt.axis('equal')
+    plt.ylim([-zmax,zmax])
+
+plt.show()

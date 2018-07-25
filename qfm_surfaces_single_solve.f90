@@ -13,8 +13,8 @@ subroutine qfm_surfaces_single_solve(j_volume)
   real(dp), dimension(:), allocatable :: Z0, d_Z0_d_phi, d2_Z0_d_phi2
   real(dp), dimension(:), allocatable :: state_vector, state_vector0, last_state_vector, residual, residual0, step_direction
   real(dp) :: angle, sinangle, cosangle, volume_target, dtheta, dphi
-  integer :: mnmax, vector_size, last_vector_size=0, index, jm, jn
-  integer, dimension(:), allocatable :: xm, xn, last_xm, last_xn
+  integer :: vector_size, last_vector_size=0, index, jm, jn
+  integer, dimension(:), allocatable :: last_xm, last_xn
   logical :: found_match
   real(dp), dimension(:,:), allocatable :: sin_m_theta, cos_m_theta, sin_n_phi, cos_n_phi
   real(dp), dimension(:), allocatable :: sin_phi, cos_phi, sin_theta, cos_theta
@@ -50,6 +50,8 @@ subroutine qfm_surfaces_single_solve(j_volume)
      N_theta = max(min_N_theta,mpol*4)
      N_phi = max(min_N_phi,ntor*4)
      print "(a,i5,a,i5,a,i6,a,i6,a)","  Using resolution mpol=",mpol,", ntor=",ntor,", N_theta=",N_theta,", N_phi=",N_phi,"."
+     max_mpol_used = max(max_mpol_used,mpol)
+     max_ntor_used = max(max_ntor_used,ntor)
 
      allocate(theta(N_theta))
      allocate(temp_1D(N_theta))
@@ -335,7 +337,7 @@ subroutine qfm_surfaces_single_solve(j_volume)
      last_xn = xn
 
      do imn = 1, mnmax
-        amnc_final(xm(imn), xn(imn), j_volume) = state_vector(imn)
+        amnc_big(xm(imn), xn(imn), j_volume) = state_vector(imn)
      end do
      lambda(j_volume) = state_vector(vector_size)
 
@@ -400,7 +402,7 @@ contains
     integer :: mnmax_to_use, imn, m, n
     logical :: computing_Jacobian
     integer :: itheta, iphi
-    real(dp) :: amnc, d_cosangle_dtheta, d_cosangle_dphi, d2_cosangle_dtheta2, d2_cosangle_dphi2, d2_cosangle_dtheta_dphi
+    real(dp) :: this_amnc, d_cosangle_dtheta, d_cosangle_dphi, d2_cosangle_dtheta2, d2_cosangle_dphi2, d2_cosangle_dtheta_dphi
 
     !print "(a,i3)","Entering qfm_surfaces_residual. Jacobian_column=",Jacobian_column
     !print *,"state_vector:",state_vector
@@ -474,13 +476,13 @@ contains
        if (computing_Jacobian) then
           m = xm(Jacobian_column)
           n = xn(Jacobian_column)
-          amnc = epsilon
+          this_amnc = epsilon
        else
           m = xm(imn)
           n = xn(imn)
-          amnc = state_vector(imn)
+          this_amnc = state_vector(imn)
        end if
-       !print *,"imn=",imn,"amnc=",amnc
+       !print *,"imn=",imn,"amnc=",this_amnc
        do iphi = 1, N_phi
           do itheta = 1, N_theta
              !sinangle = sin(m*theta-n*phi) = sin(m*theta) * cos(n*phi) - cos(m*theta) * sin(n*phi)
@@ -494,30 +496,30 @@ contains
              d2_cosangle_dphi2  = -n*n*nfp*nfp*cosangle
              d2_cosangle_dtheta_dphi = m*n*nfp*cosangle
             
-             R(itheta,iphi) = R(itheta,iphi) + amnc * cosangle * cos_theta(itheta)
-             !X(itheta,iphi) = X(itheta,iphi) + amnc * cosangle * cos_theta(itheta) * cos_phi(iphi)
-             !Y(itheta,iphi) = Y(itheta,iphi) + amnc * cosangle * cos_theta(itheta) * sin_phi(iphi)
-             Z(itheta,iphi) = Z(itheta,iphi) + amnc * cosangle * sin_theta(itheta)
+             R(itheta,iphi) = R(itheta,iphi) + this_amnc * cosangle * cos_theta(itheta)
+             !X(itheta,iphi) = X(itheta,iphi) + this_amnc * cosangle * cos_theta(itheta) * cos_phi(iphi)
+             !Y(itheta,iphi) = Y(itheta,iphi) + this_amnc * cosangle * cos_theta(itheta) * sin_phi(iphi)
+             Z(itheta,iphi) = Z(itheta,iphi) + this_amnc * cosangle * sin_theta(itheta)
             
-             dXdtheta(itheta,iphi) = dXdtheta(itheta,iphi) + amnc * (cosangle * (-sin_theta(itheta)) + d_cosangle_dtheta * cos_theta(itheta)) * cos_phi(iphi)
-             dYdtheta(itheta,iphi) = dYdtheta(itheta,iphi) + amnc * (cosangle * (-sin_theta(itheta)) + d_cosangle_dtheta * cos_theta(itheta)) * sin_phi(iphi)
-             dZdtheta(itheta,iphi) = dZdtheta(itheta,iphi) + amnc * (cosangle *   cos_theta(itheta)  + d_cosangle_dtheta * sin_theta(itheta))
+             dXdtheta(itheta,iphi) = dXdtheta(itheta,iphi) + this_amnc * (cosangle * (-sin_theta(itheta)) + d_cosangle_dtheta * cos_theta(itheta)) * cos_phi(iphi)
+             dYdtheta(itheta,iphi) = dYdtheta(itheta,iphi) + this_amnc * (cosangle * (-sin_theta(itheta)) + d_cosangle_dtheta * cos_theta(itheta)) * sin_phi(iphi)
+             dZdtheta(itheta,iphi) = dZdtheta(itheta,iphi) + this_amnc * (cosangle *   cos_theta(itheta)  + d_cosangle_dtheta * sin_theta(itheta))
             
-             dXdphi(itheta,iphi) = dXdphi(itheta,iphi) + amnc * (cosangle * (-sin_phi(iphi)) + d_cosangle_dphi * cos_phi(iphi)) * cos_theta(itheta)
-             dYdphi(itheta,iphi) = dYdphi(itheta,iphi) + amnc * (cosangle *   cos_phi(iphi)  + d_cosangle_dphi * sin_phi(iphi)) * cos_theta(itheta)
-             dZdphi(itheta,iphi) = dZdphi(itheta,iphi) + amnc * d_cosangle_dphi * sin_theta(itheta)
+             dXdphi(itheta,iphi) = dXdphi(itheta,iphi) + this_amnc * (cosangle * (-sin_phi(iphi)) + d_cosangle_dphi * cos_phi(iphi)) * cos_theta(itheta)
+             dYdphi(itheta,iphi) = dYdphi(itheta,iphi) + this_amnc * (cosangle *   cos_phi(iphi)  + d_cosangle_dphi * sin_phi(iphi)) * cos_theta(itheta)
+             dZdphi(itheta,iphi) = dZdphi(itheta,iphi) + this_amnc * d_cosangle_dphi * sin_theta(itheta)
             
-             d2Xdtheta2(itheta,iphi) = d2Xdtheta2(itheta,iphi) + amnc * (cosangle * (-cos_theta(itheta)) + 2*d_cosangle_dtheta * (-sin_theta(itheta)) + d2_cosangle_dtheta2 * cos_theta(itheta)) * cos_phi(iphi)
-             d2Ydtheta2(itheta,iphi) = d2Ydtheta2(itheta,iphi) + amnc * (cosangle * (-cos_theta(itheta)) + 2*d_cosangle_dtheta * (-sin_theta(itheta)) + d2_cosangle_dtheta2 * cos_theta(itheta)) * sin_phi(iphi)
-             d2Zdtheta2(itheta,iphi) = d2Zdtheta2(itheta,iphi) + amnc * (cosangle * (-sin_theta(itheta)) + 2*d_cosangle_dtheta *   cos_theta(itheta)  + d2_cosangle_dtheta2 * sin_theta(itheta))
+             d2Xdtheta2(itheta,iphi) = d2Xdtheta2(itheta,iphi) + this_amnc * (cosangle * (-cos_theta(itheta)) + 2*d_cosangle_dtheta * (-sin_theta(itheta)) + d2_cosangle_dtheta2 * cos_theta(itheta)) * cos_phi(iphi)
+             d2Ydtheta2(itheta,iphi) = d2Ydtheta2(itheta,iphi) + this_amnc * (cosangle * (-cos_theta(itheta)) + 2*d_cosangle_dtheta * (-sin_theta(itheta)) + d2_cosangle_dtheta2 * cos_theta(itheta)) * sin_phi(iphi)
+             d2Zdtheta2(itheta,iphi) = d2Zdtheta2(itheta,iphi) + this_amnc * (cosangle * (-sin_theta(itheta)) + 2*d_cosangle_dtheta *   cos_theta(itheta)  + d2_cosangle_dtheta2 * sin_theta(itheta))
              
-             d2Xdthetadphi(itheta,iphi) = d2Xdthetadphi(itheta,iphi) + amnc * ((cosangle * (-sin_theta(itheta)) + d_cosangle_dtheta * cos_theta(itheta)) * (-sin_phi(iphi)) + (d_cosangle_dphi * (-sin_theta(itheta)) + d2_cosangle_dtheta_dphi * cos_theta(itheta)) * cos_phi(iphi))
-             d2Ydthetadphi(itheta,iphi) = d2Ydthetadphi(itheta,iphi) + amnc * ((cosangle * (-sin_theta(itheta)) + d_cosangle_dtheta * cos_theta(itheta)) *   cos_phi(iphi)  + (d_cosangle_dphi * (-sin_theta(itheta)) + d2_cosangle_dtheta_dphi * cos_theta(itheta)) * sin_phi(iphi))
-             d2Zdthetadphi(itheta,iphi) = d2Zdthetadphi(itheta,iphi) + amnc * (d_cosangle_dphi *   cos_theta(itheta)  + d2_cosangle_dtheta_dphi * sin_theta(itheta))
+             d2Xdthetadphi(itheta,iphi) = d2Xdthetadphi(itheta,iphi) + this_amnc * ((cosangle * (-sin_theta(itheta)) + d_cosangle_dtheta * cos_theta(itheta)) * (-sin_phi(iphi)) + (d_cosangle_dphi * (-sin_theta(itheta)) + d2_cosangle_dtheta_dphi * cos_theta(itheta)) * cos_phi(iphi))
+             d2Ydthetadphi(itheta,iphi) = d2Ydthetadphi(itheta,iphi) + this_amnc * ((cosangle * (-sin_theta(itheta)) + d_cosangle_dtheta * cos_theta(itheta)) *   cos_phi(iphi)  + (d_cosangle_dphi * (-sin_theta(itheta)) + d2_cosangle_dtheta_dphi * cos_theta(itheta)) * sin_phi(iphi))
+             d2Zdthetadphi(itheta,iphi) = d2Zdthetadphi(itheta,iphi) + this_amnc * (d_cosangle_dphi *   cos_theta(itheta)  + d2_cosangle_dtheta_dphi * sin_theta(itheta))
              
-             d2Xdphi2(itheta,iphi) = d2Xdphi2(itheta,iphi) + amnc * (cosangle * (-cos_phi(iphi)) + 2*d_cosangle_dphi * (-sin_phi(iphi)) + d2_cosangle_dphi2 * cos_phi(iphi)) * cos_theta(itheta)
-             d2Ydphi2(itheta,iphi) = d2Ydphi2(itheta,iphi) + amnc * (cosangle * (-sin_phi(iphi)) + 2*d_cosangle_dphi *   cos_phi(iphi)  + d2_cosangle_dphi2 * sin_phi(iphi)) * cos_theta(itheta)
-             d2Zdphi2(itheta,iphi) = d2Zdphi2(itheta,iphi) + amnc * d2_cosangle_dphi2 * sin_theta(itheta)
+             d2Xdphi2(itheta,iphi) = d2Xdphi2(itheta,iphi) + this_amnc * (cosangle * (-cos_phi(iphi)) + 2*d_cosangle_dphi * (-sin_phi(iphi)) + d2_cosangle_dphi2 * cos_phi(iphi)) * cos_theta(itheta)
+             d2Ydphi2(itheta,iphi) = d2Ydphi2(itheta,iphi) + this_amnc * (cosangle * (-sin_phi(iphi)) + 2*d_cosangle_dphi *   cos_phi(iphi)  + d2_cosangle_dphi2 * sin_phi(iphi)) * cos_theta(itheta)
+             d2Zdphi2(itheta,iphi) = d2Zdphi2(itheta,iphi) + this_amnc * d2_cosangle_dphi2 * sin_theta(itheta)
             
           end do
        end do

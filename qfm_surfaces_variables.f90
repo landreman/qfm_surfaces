@@ -52,9 +52,11 @@ module qfm_surfaces_variables
   real(dp), dimension(:), allocatable :: volumes, quadratic_flux
   integer :: N_resolutions
   integer, dimension(:), allocatable :: mpols, ntors
-  integer :: nmax_axis
+  integer :: nmax_axis, max_mpol_used, max_ntor_used, mnmax
   real(dp), dimension(:), allocatable :: R0c, R0s, Z0c, Z0s, lambda
-  real(dp), dimension(:,:,:), allocatable :: amnc_final
+  real(dp), dimension(:,:,:), allocatable :: amnc_big
+  real(dp), dimension(:,:), allocatable :: amnc
+  integer, dimension(:), allocatable :: xm, xn
 
   namelist / qfm_surfaces / nfp, N_phi_axis, amplitude_m1, amplitude_m2, stellarator_symmetry, N_volumes, max_volume, max_mpol, max_ntor, min_accurate_quadratic_flux, &
        min_N_theta, min_N_phi, N_iterations, N_line_search, Newton_tolerance
