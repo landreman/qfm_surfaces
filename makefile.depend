@@ -3,9 +3,15 @@
 OBJ_FILES = qfm_surfaces.o \
 	qfm_surfaces_compute_axis.o \
 	qfm_surfaces_compute_B.o \
+	qfm_surfaces_deallocate.o \
 	qfm_surfaces_differentiation_matrix.o \
+	qfm_surfaces_init_solve.o \
+	qfm_surfaces_Jacobian.o \
+	qfm_surfaces_Newton.o \
 	qfm_surfaces_read_input.o \
-	qfm_surfaces_single_solve.o \
+	qfm_surfaces_residual.o \
+	qfm_surfaces_single_volume.o \
+	qfm_surfaces_solver_variables.o \
 	qfm_surfaces_validate_input.o \
 	qfm_surfaces_variables.o \
 	qfm_surfaces_volume_scan.o \
@@ -15,9 +21,14 @@ OBJ_FILES = qfm_surfaces.o \
 qfm_surfaces.o: qfm_surfaces_variables.o
 qfm_surfaces_compute_axis.o: qfm_surfaces_variables.o
 qfm_surfaces_compute_B.o: qfm_surfaces_variables.o
+qfm_surfaces_deallocate.o: qfm_surfaces_solver_variables.o qfm_surfaces_variables.o
 qfm_surfaces_differentiation_matrix.o: 
+qfm_surfaces_Jacobian.o: qfm_surfaces_solver_variables.o qfm_surfaces_variables.o
+qfm_surfaces_init_solve.o: qfm_surfaces_solver_variables.o qfm_surfaces_variables.o
+qfm_surfaces_Newton.o: qfm_surfaces_solver_variables.o qfm_surfaces_variables.o
+qfm_surfaces_residual.o: qfm_surfaces_solver_variables.o qfm_surfaces_variables.o
 qfm_surfaces_read_input.o: qfm_surfaces_variables.o
-qfm_surfaces_single_solve.o: qfm_surfaces_variables.o
+qfm_surfaces_single_volume.o: qfm_surfaces_solver_variables.o qfm_surfaces_variables.o
 qfm_surfaces_validate_input.o: qfm_surfaces_variables.o
 qfm_surfaces_variables.o:
 qfm_surfaces_volume_scan.o: qfm_surfaces_variables.o

@@ -29,7 +29,7 @@ subroutine qfm_surfaces_volume_scan
   print "(*(es10.3))",volumes
 
   do j_volume = 1, N_volumes
-     call qfm_surfaces_single_solve(j_volume)
+     call qfm_surfaces_single_volume(j_volume)
   end do
 
   ! Trim down amnc_big to the arrays saved to output
