@@ -5,6 +5,8 @@ subroutine qfm_surfaces_Newton()
 
   implicit none
 
+  real(dp) :: step_direction_norm
+
 
   ! As a prelude to the Newton iteration, get the initial residual:
   call qfm_surfaces_residual(0)
@@ -37,8 +39,15 @@ subroutine qfm_surfaces_Newton()
         print *, "Error in LAPACK call DGESV: info = ", INFO
         stop
      end if
+     step_direction_norm = maxval(abs(step_direction))
+     print *,"L_inf norm of step_direction:",step_direction_norm
 
      step_scale = 1
+     ! Don't change any Fourier coefficients by more than the average minor radius times trust_region_factor:
+     if (step_direction_norm > trust_region_factor * state_vector(1)) then
+        step_scale = trust_region_factor * state_vector(1) / step_direction_norm
+        print *,"Lowering initial step_scale to",step_scale
+     end if
      line_search: do j_line_search = 1, N_line_search
         state_vector = state_vector0 + step_scale * step_direction
 

@@ -12,7 +12,7 @@ program qfm_surfaces
   integer :: ierr
 !integer :: tic, toc, countrate, ierr
   real :: start_time, end_time
-  real(dp) :: B_R, B_phi, B_Z
+  !real(dp) :: B_R, B_phi, B_Z
 
   call mpi_init(ierr)
   call mpi_comm_rank(MPI_COMM_WORLD, mpi_rank, ierr)

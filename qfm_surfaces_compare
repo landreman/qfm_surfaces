@@ -1,0 +1,94 @@
+#!/usr/bin/env python
+
+import numpy as np
+from scipy.io import netcdf
+import sys, os
+
+print "Usage: "+__file__+" <1 or more qfm_surfaces_out.*.nc files>"
+
+if len(sys.argv) < 2:
+    print "Error! You must specify at least 1 argument: the qfm_surfaces_out.*.nc file"
+    exit(1)
+
+R_axis_array = []
+Z_axis_array = []
+Rs_array = []
+Zs_array = []
+zmax = 0
+for which_file in range(1,len(sys.argv)):
+    filename = sys.argv[which_file]
+    print "Reading filename "+filename
+    f = netcdf.netcdf_file(filename,mode='r',mmap=False)
+
+    N_volumes = f.variables['N_volumes'][()]
+    nfp = f.variables['nfp'][()]
+    R0c = f.variables['R0c'][()]
+    Z0s = f.variables['Z0s'][()]
+    xm = f.variables['xm'][()]
+    xn = f.variables['xn'][()]
+    amnc = f.variables['amnc'][()]
+    print "amnc.shape:",amnc.shape
+
+    f.close()
+
+    phi = np.linspace(0,2*np.pi/nfp,4,endpoint=False)
+    R_axis = np.zeros(4)
+    Z_axis = np.zeros(4)
+    for n in range(len(R0c)):
+        R_axis += R0c[n] * np.cos(n*nfp*phi)
+        Z_axis += Z0s[n] * np.sin(n*nfp*phi)
+
+    N_theta = 100
+    theta = np.linspace(0,2*np.pi,N_theta)
+    phi2D, theta2D = np.meshgrid(phi,theta)
+    print "phi2D.shape:",phi2D.shape
+    Rs = np.zeros((N_theta,4,N_volumes))
+    Zs = np.zeros((N_theta,4,N_volumes))
+    a = np.zeros((N_theta,4,N_volumes))
+
+    for j_volume in range(N_volumes):
+        for jmn in range(len(xm)):
+            a[:,:,j_volume] += amnc[j_volume,jmn]*np.cos(xm[jmn]*theta2D-nfp*xn[jmn]*phi2D)
+        for j in range(4):
+            Rs[:,j,j_volume] = R_axis[j]
+            Zs[:,j,j_volume] = Z_axis[j]
+        Rs[:,:,j_volume] += a[:,:,j_volume] * np.cos(theta2D)
+        Zs[:,:,j_volume] += a[:,:,j_volume] * np.sin(theta2D)
+
+
+    zmax = np.max([zmax,np.max(np.abs(Zs))])
+    print "zmax:",zmax
+
+    R_axis_array.append(R_axis)
+    Z_axis_array.append(Z_axis)
+    Rs_array.append(Rs)
+    Zs_array.append(Zs)
+
+import matplotlib.pyplot as plt
+
+fig = plt.figure(figsize=(16,6.8))
+fig.patch.set_facecolor('white')
+
+numRows = 2
+numCols = 2
+
+colors = ['r','b','y','g','m','k']
+
+for jphi in range(4):
+    plt.subplot(numRows,numCols,jphi+1)
+    for which_file in range(len(Rs_array)):
+        this_color = colors[np.mod(which_file,len(colors))]
+        plt.plot(R_axis_array[which_file][jphi],Z_axis_array[which_file][jphi],'+k',color = this_color,label=os.path.abspath(sys.argv[which_file+1]))
+        for j_volume in range(N_volumes):
+            plt.plot(Rs_array[which_file][:,jphi,j_volume], Zs_array[which_file][:,jphi,j_volume],'.-',color = this_color, markersize=2)
+    plt.xlabel('R')
+    plt.ylabel('Z')
+    plt.axis('equal')
+    plt.ylim([-zmax,zmax])
+    if jphi==0:
+        plt.legend(fontsize=6,loc=0)
+
+plt.figtext(0.5,0.01,'Plotted by '+os.path.abspath(__file__),fontsize=6,ha='center',va='bottom')
+plt.tight_layout()
+
+plt.show()

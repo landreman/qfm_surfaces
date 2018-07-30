@@ -13,7 +13,15 @@ subroutine qfm_surfaces_write_output
   ! Scalars:
   character(len=*), parameter :: &
        vn_nfp = "nfp", &
-       vn_N_volumes = "N_volumes"
+       vn_N_volumes = "N_volumes", &
+       vn_Newton_tolerance = "Newton_tolerance", &
+       vn_N_iterations = "N_iterations", &
+       vn_N_line_search = "N_line_search", &
+       vn_Newton_tolerance_axis = "Newton_tolerance_axis", &
+       vn_N_iterations_axis = "N_iterations_axis", &
+       vn_N_line_search_axis = "N_line_search_axis", &
+       vn_max_mpol = "max_mpol", &
+       vn_max_ntor = "max_ntor"
 
   ! Arrays with dimension 1
   character(len=*), parameter :: &
@@ -81,6 +89,15 @@ subroutine qfm_surfaces_write_output
   call cdf_define(ncid, vn_N_volumes, N_volumes)
   !call cdf_setatt(ncid, vn_resolution_option, 'Method used to define the geometry of the plasma surface.' // input_parameter_text)
 
+  call cdf_define(ncid, vn_Newton_tolerance, Newton_tolerance)
+  call cdf_define(ncid, vn_N_iterations, N_iterations)
+  call cdf_define(ncid, vn_N_line_search, N_line_search)
+  call cdf_define(ncid, vn_Newton_tolerance_axis, Newton_tolerance_axis)
+  call cdf_define(ncid, vn_N_iterations_axis, N_iterations_axis)
+  call cdf_define(ncid, vn_N_line_search_axis, N_line_search_axis)
+  call cdf_define(ncid, vn_max_mpol, max_mpol)
+  call cdf_define(ncid, vn_max_ntor, max_ntor)
+  
 
   ! Arrays with dimension 1
 
@@ -114,6 +131,14 @@ subroutine qfm_surfaces_write_output
 
   call cdf_write(ncid, vn_nfp, nfp)
   call cdf_write(ncid, vn_N_volumes, N_volumes)
+  call cdf_write(ncid, vn_Newton_tolerance, Newton_tolerance)
+  call cdf_write(ncid, vn_N_iterations, N_iterations)
+  call cdf_write(ncid, vn_N_line_search, N_line_search)
+  call cdf_write(ncid, vn_Newton_tolerance_axis, Newton_tolerance_axis)
+  call cdf_write(ncid, vn_N_iterations_axis, N_iterations_axis)
+  call cdf_write(ncid, vn_N_line_search_axis, N_line_search_axis)
+  call cdf_write(ncid, vn_max_mpol, max_mpol)
+  call cdf_write(ncid, vn_max_ntor, max_ntor)
 
   ! Arrays with dimension 1
 
