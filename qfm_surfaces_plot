@@ -21,6 +21,9 @@ Z0s = f.variables['Z0s'][()]
 xm = f.variables['xm'][()]
 xn = f.variables['xn'][()]
 amnc = f.variables['amnc'][()]
+quadratic_flux_convergence = f.variables['quadratic_flux_convergence'][()]
+quadratic_flux = f.variables['quadratic_flux'][()]
+areas = f.variables['areas'][()]
 print "amnc.shape:",amnc.shape
 
 f.close()
@@ -53,6 +56,9 @@ for j_volume in range(N_volumes):
 zmax = np.max(np.abs(Zs))
 print "zmax:",zmax
 
+###########################################
+###########################################
+
 import matplotlib.pyplot as plt
 
 fig = plt.figure(figsize=(16,7))
@@ -61,7 +67,7 @@ fig.patch.set_facecolor('white')
 numRows = 2
 numCols = 2
 
-for jphi in range(4):
+for jphi in range(3):
     plt.subplot(numRows,numCols,jphi+1)
     plt.plot(R[jphi],Z[jphi],'+k')
     for j_volume in range(N_volumes):
@@ -70,5 +76,26 @@ for jphi in range(4):
     plt.ylabel('Z')
     plt.axis('equal')
     plt.ylim([-zmax,zmax])
+
+plt.subplot(numRows,numCols,4)
+plt.semilogy(quadratic_flux,'.-',label='Quadratic flux')
+plt.semilogy(quadratic_flux / areas,'.-',label='Quadratic flux / Area')
+plt.xlabel('Volume index')
+plt.legend(loc=0,fontsize=6)
+
+plt.tight_layout()
+
+###########################################
+###########################################
+
+fig = plt.figure(figsize=(16,7))
+fig.patch.set_facecolor('white')
+
+print "quadratic_flux_convergence.shape:",quadratic_flux_convergence.shape
+for j_volume in range(N_volumes):
+    plt.semilogy(quadratic_flux_convergence[j_volume,:],'.-',label='volume '+str(j_volume))
+plt.legend(loc=0,fontsize=6)
+plt.xlabel('Resolution index')
+plt.title('Quadratic flux')
 
 plt.show()

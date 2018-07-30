@@ -29,6 +29,11 @@ subroutine qfm_surfaces_single_volume(j_volume)
      end do
      lambda(j_volume) = state_vector(vector_size)
 
+     call qfm_surfaces_flux()
+     areas(j_volume) = this_area
+     quadratic_flux(j_volume) = this_quadratic_flux
+     quadratic_flux_convergence(j_resolution,j_volume) = this_quadratic_flux
+
      call qfm_surfaces_deallocate()
 
   end do ! Loop over resolution

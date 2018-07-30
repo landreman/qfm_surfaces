@@ -5,6 +5,7 @@ OBJ_FILES = qfm_surfaces.o \
 	qfm_surfaces_compute_B.o \
 	qfm_surfaces_deallocate.o \
 	qfm_surfaces_differentiation_matrix.o \
+	qfm_surfaces_flux.o \
 	qfm_surfaces_init_solve.o \
 	qfm_surfaces_Jacobian.o \
 	qfm_surfaces_Newton.o \
@@ -23,8 +24,9 @@ qfm_surfaces_compute_axis.o: qfm_surfaces_variables.o
 qfm_surfaces_compute_B.o: qfm_surfaces_variables.o
 qfm_surfaces_deallocate.o: qfm_surfaces_solver_variables.o qfm_surfaces_variables.o
 qfm_surfaces_differentiation_matrix.o: 
-qfm_surfaces_Jacobian.o: qfm_surfaces_solver_variables.o qfm_surfaces_variables.o
+qfm_surfaces_flux.o: qfm_surfaces_solver_variables.o qfm_surfaces_variables.o
 qfm_surfaces_init_solve.o: qfm_surfaces_solver_variables.o qfm_surfaces_variables.o
+qfm_surfaces_Jacobian.o: qfm_surfaces_solver_variables.o qfm_surfaces_variables.o
 qfm_surfaces_Newton.o: qfm_surfaces_solver_variables.o qfm_surfaces_variables.o
 qfm_surfaces_residual.o: qfm_surfaces_solver_variables.o qfm_surfaces_variables.o
 qfm_surfaces_read_input.o: qfm_surfaces_variables.o

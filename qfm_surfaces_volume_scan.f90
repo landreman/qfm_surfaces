@@ -21,7 +21,10 @@ subroutine qfm_surfaces_volume_scan
   print "(a,*(i4))"," ntors:",ntors
 
   allocate(volumes(N_volumes))
+  allocate(areas(N_volumes))
   allocate(quadratic_flux(N_volumes))
+  allocate(quadratic_flux_convergence(N_resolutions,N_volumes))
+  allocate(shape_convergence(N_resolutions,N_shape_convergence_locations,N_volumes))
   allocate(lambda(N_volumes))
 
   volumes = [( max_volume * ((j_volume * 1.0d+0)/N_volumes)**2, j_volume = 1, N_volumes )]

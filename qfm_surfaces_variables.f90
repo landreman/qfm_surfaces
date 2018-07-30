@@ -50,7 +50,10 @@ module qfm_surfaces_variables
   integer :: min_N_phi = 16
   real(dp) :: min_accurate_quadratic_flux = 1.0e-9
   real(dp) :: trust_region_factor = 0.2d+0
-  real(dp), dimension(:), allocatable :: volumes, quadratic_flux
+  real(dp), dimension(:), allocatable :: volumes, areas, quadratic_flux
+  real(dp), dimension(:,:), allocatable :: quadratic_flux_convergence
+  real(dp), dimension(:,:,:), allocatable :: shape_convergence
+  integer, parameter :: N_shape_convergence_locations = 8
   integer :: N_resolutions
   integer, dimension(:), allocatable :: mpols, ntors
   integer :: nmax_axis, max_mpol_used, max_ntor_used, mnmax

@@ -26,6 +26,8 @@ subroutine qfm_surfaces_write_output
   ! Arrays with dimension 1
   character(len=*), parameter :: &
        vn_volumes = "volumes", &
+       vn_areas = "areas", &
+       vn_quadratic_flux = "quadratic_flux", &
        vn_lambda = "lambda", &
        vn_R0c = "R0c", &
        vn_R0s = "R0s", &
@@ -33,6 +35,7 @@ subroutine qfm_surfaces_write_output
        vn_Z0s = "Z0s", &
        vn_xm = "xm", &
        vn_xn = "xn"
+       
 
   ! Arrays with dimension 2
   character(len=*), parameter :: &
@@ -41,7 +44,8 @@ subroutine qfm_surfaces_write_output
        vn_scan_R0s  = "scan_R0s", &
        vn_scan_Z0c  = "scan_Z0c", &
        vn_scan_Z0s  = "scan_Z0s", &
-       vn_amnc = "amnc"
+       vn_amnc = "amnc", &
+       vn_quadratic_flux_convergence = "quadratic_flux_convergence"
 
 !!$  ! Arrays with dimension 3
 !!$  character(len=*), parameter :: &
@@ -62,7 +66,8 @@ subroutine qfm_surfaces_write_output
   ! http://stackoverflow.com/questions/21552430/gfortran-does-not-allow-character-arrays-with-varying-component-lengths
   character(len=*), parameter, dimension(2) :: &
        mnmax_N_volumes_dim = (/ character(len=50) :: 'mnmax','N_volumes'/), &
-       N_scan_max_axis_nmax_plus_1_dim = (/ character(len=50) :: 'N_scan','max_axis_nmax_plus_1'/)
+       N_scan_max_axis_nmax_plus_1_dim = (/ character(len=50) :: 'N_scan','max_axis_nmax_plus_1'/), &
+       N_resolutions_N_volumes_dim = (/ character(len=50) :: "N_resolutions","N_volumes" /)
 
 !!$  ! Arrays with dimension 3:
 !!$  character(len=*), parameter, dimension(3) :: &
@@ -102,6 +107,8 @@ subroutine qfm_surfaces_write_output
   ! Arrays with dimension 1
 
   call cdf_define(ncid, vn_volumes, volumes, dimname=N_volumes_dim)
+  call cdf_define(ncid, vn_areas, areas, dimname=N_volumes_dim)
+  call cdf_define(ncid, vn_quadratic_flux, quadratic_flux, dimname=N_volumes_dim)
   call cdf_define(ncid, vn_lambda, lambda, dimname=N_volumes_dim)
   call cdf_define(ncid, vn_R0c, R0c, dimname=nmax_axis_plus_1_dim)
   call cdf_define(ncid, vn_R0s, R0s, dimname=nmax_axis_plus_1_dim)
@@ -114,6 +121,7 @@ subroutine qfm_surfaces_write_output
   ! Arrays with dimension 2
 
   call cdf_define(ncid, vn_amnc,  amnc, dimname=mnmax_N_volumes_dim)
+  call cdf_define(ncid, vn_quadratic_flux_convergence,  quadratic_flux_convergence, dimname=N_resolutions_N_volumes_dim)
 !!$  call cdf_define(ncid, vn_scan_R0c,  scan_R0c, dimname=N_scan_max_axis_nmax_plus_1_dim)
 !!$  call cdf_define(ncid, vn_scan_R0s,  scan_R0s, dimname=N_scan_max_axis_nmax_plus_1_dim)
 !!$  call cdf_define(ncid, vn_scan_Z0c,  scan_Z0c, dimname=N_scan_max_axis_nmax_plus_1_dim)
@@ -143,6 +151,8 @@ subroutine qfm_surfaces_write_output
   ! Arrays with dimension 1
 
   call cdf_write(ncid, vn_volumes, volumes)
+  call cdf_write(ncid, vn_areas, areas)
+  call cdf_write(ncid, vn_quadratic_flux, quadratic_flux)
   call cdf_write(ncid, vn_lambda, lambda)
   call cdf_write(ncid, vn_R0c, R0c)
   call cdf_write(ncid, vn_R0s, R0s)
@@ -154,6 +164,7 @@ subroutine qfm_surfaces_write_output
   ! Arrays with dimension 2
 
   call cdf_write(ncid, vn_amnc,  amnc)
+  call cdf_write(ncid, vn_quadratic_flux_convergence,  quadratic_flux_convergence)
 
   ! Arrays with dimension 3
 
