@@ -12,14 +12,13 @@ subroutine qfm_surfaces_compute_axis
   real(dp), dimension(:), allocatable :: B_R, B_phi, B_Z
   real(dp), dimension(:), allocatable :: R_axis_reconstruction, Z_axis_reconstruction
   real(dp), dimension(:,:), allocatable :: differentiation_matrix, DD, Jacobian
-  logical :: verbose = .true.
   real(dp) :: factor, sinangle, cosangle
 
   ! Variables needed by LAPACK:                                                                                            
   integer :: INFO
   integer, dimension(:), allocatable :: IPIV
 
-  print "(a)"," Beginning solve for magnetic axis."
+  if (proc0) print "(a)"," Beginning solve for magnetic axis."
 
   ! For N_phi_axis to be odd.
   if (mod(N_phi_axis,2)==0) N_phi_axis = N_phi_axis + 1
@@ -63,7 +62,7 @@ subroutine qfm_surfaces_compute_axis
   call qfm_surfaces_axis_residual()
   initial_residual_norm = sqrt(sum(residual * residual))
   residual_norm = initial_residual_norm
-  print "(a,es10.3)","                 Initial residual L2 norm:",residual_norm
+  if (proc0) print "(a,es10.3)","                 Initial residual L2 norm:",residual_norm
 
   ! Here is the main Newton iteration:
   Newton: do iteration = 1, N_iterations_axis
@@ -76,7 +75,7 @@ subroutine qfm_surfaces_compute_axis
      call qfm_surfaces_axis_Jacobian()
 
      state0 = state
-     if (verbose) print "(a,i3)","  Newton iteration ",iteration
+     if (proc0) print "(a,i3)","  Newton iteration ",iteration
      ! We will use the LAPACK subroutine DGESV to solve a general (asymmetric) linear system
      ! step_direction = - matrix \ residual
      step_direction = -residual ! Note that LAPACK will over-write step_direction and with the solution, and over-write Jacobian with the LU factorization.
@@ -93,14 +92,14 @@ subroutine qfm_surfaces_compute_axis
         call qfm_surfaces_axis_residual()
         residual_norm = sqrt(sum(residual * residual))
         !if (verbose) print "(a,i3,a,es10.3,a,es23.15)","    Line search step",j_line_search,"  Relative residual L2 norm:",residual_norm / initial_residual_norm,"  iota:",iota
-        if (verbose) print "(a,i3,a,es10.3,a,es23.15)","    Line search step",j_line_search,"  Residual L2 norm:",residual_norm
+        if (proc0) print "(a,i3,a,es10.3,a,es23.15)","    Line search step",j_line_search,"  Residual L2 norm:",residual_norm
         if (residual_norm < last_residual_norm) exit line_search
 
         step_scale = step_scale / 2
      end do line_search
 
      if (residual_norm > last_residual_norm) then
-        print *,"Line search failed to reduce residual."
+        if (proc0) print *,"Line search failed to reduce residual."
         exit Newton
      end if
   end do Newton
@@ -157,7 +156,7 @@ subroutine qfm_surfaces_compute_axis
   end do
 
   factor = maxval(abs(R_axis - R_axis_reconstruction))
-  print *,"Residual from in R transform:",factor
+  if (proc0) print *,"Residual from in R transform:",factor
   if (factor > 1.0d-12) then
      print *,"R_axis before transform:",R_axis
      print *,"R_axis after transform: ",R_axis_reconstruction
@@ -165,7 +164,7 @@ subroutine qfm_surfaces_compute_axis
   end if
 
   factor = maxval(abs(Z_axis - Z_axis_reconstruction))
-  print *,"Residual from in Z transform:",factor
+  if (proc0) print *,"Residual from in Z transform:",factor
   if (factor > 1.0d-12) then
      print *,"Z_axis before transform:",Z_axis
      print *,"Z_axis after transform: ",Z_axis_reconstruction
@@ -177,7 +176,7 @@ subroutine qfm_surfaces_compute_axis
   deallocate(B_R, B_phi, B_Z)
   deallocate(phi_axis, differentiation_matrix)
 
-  print "(a)"," Done solving for magnetic axis."
+  if (proc0) print "(a)"," Done solving for magnetic axis."
 contains
 
 ! -----------------------------------------------------------------------------------

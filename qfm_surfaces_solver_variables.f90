@@ -32,7 +32,6 @@ module qfm_surfaces_solver_variables
   real(dp), dimension(:), allocatable :: phi_copied
   integer :: iteration, j_line_search
   real(dp) :: residual_norm, initial_residual_norm, last_residual_norm, step_scale
-  logical :: verbose = .true.
   real :: start_time, end_time
   real(dp) :: this_area, this_quadratic_flux
 

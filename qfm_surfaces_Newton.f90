@@ -12,7 +12,7 @@ subroutine qfm_surfaces_Newton()
   call qfm_surfaces_residual(0)
   initial_residual_norm = sqrt(sum(residual * residual))
   residual_norm = initial_residual_norm
-  print "(a,es10.3)","                 Initial residual L2 norm:",residual_norm
+  if (verbose) print "(a,es10.3)","                 Initial residual L2 norm:",residual_norm
   !print *,"residual:",residual
   !return
 
@@ -34,19 +34,19 @@ subroutine qfm_surfaces_Newton()
      call cpu_time(start_time)
      call DGESV(vector_size, 1, Jacobian, vector_size, IPIV, step_direction, vector_size, INFO)
      call cpu_time(end_time)
-     print *,"Time for DGESV:",end_time-start_time
+     if (trim(verbose_option)==verbose_option_detailed) print *,"Time for DGESV:",end_time-start_time
      if (INFO /= 0) then
         print *, "Error in LAPACK call DGESV: info = ", INFO
         stop
      end if
      step_direction_norm = maxval(abs(step_direction))
-     print *,"L_inf norm of step_direction:",step_direction_norm
+     if (verbose) print *,"L_inf norm of step_direction:",step_direction_norm
 
      step_scale = 1
      ! Don't change any Fourier coefficients by more than the average minor radius times trust_region_factor:
      if (step_direction_norm > trust_region_factor * state_vector(1)) then
         step_scale = trust_region_factor * state_vector(1) / step_direction_norm
-        print *,"Lowering initial step_scale to",step_scale
+        if (verbose) print *,"Lowering initial step_scale to",step_scale
      end if
      line_search: do j_line_search = 1, N_line_search
         state_vector = state_vector0 + step_scale * step_direction
@@ -54,7 +54,7 @@ subroutine qfm_surfaces_Newton()
         call cpu_time(start_time)
         call qfm_surfaces_residual(0)
         call cpu_time(end_time)
-        print *,"Time to compute residual:",end_time-start_time
+        if (trim(verbose_option)==verbose_option_detailed) print *,"Time to compute residual:",end_time-start_time
         residual_norm = sqrt(sum(residual * residual))
         !if (verbose) print "(a,i3,a,es10.3,a,es23.15)","    Line search step",j_line_search,"  Relative residual L2 norm:",residual_norm / initial_residual_norm,"  iota:",iota
         if (verbose) print "(a,i3,a,es10.3,a,es23.15)","    Line search step",j_line_search,"  Residual L2 norm:",residual_norm

@@ -9,7 +9,7 @@ subroutine qfm_surfaces_single_volume(j_volume)
 
   volume_target = volumes(j_volume)
   print "(a,i5,a,i5,a)"," Solving for volume",j_volume," of",N_volumes,"."
-  print *,"volume_target=",volume_target
+  if (verbose) print *,"volume_target=",volume_target
 
   do j_resolution = 1, N_resolutions
      call qfm_surfaces_init_solve()

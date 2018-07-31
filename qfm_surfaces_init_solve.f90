@@ -9,7 +9,7 @@ subroutine qfm_surfaces_init_solve()
   ntor = ntors(j_resolution)
   N_theta = max(min_N_theta,mpol*4)
   N_phi = max(min_N_phi,ntor*4)
-  print "(a,i5,a,i5,a,i6,a,i6,a)","  Using resolution mpol=",mpol,", ntor=",ntor,", N_theta=",N_theta,", N_phi=",N_phi,"."
+  if (verbose) print "(a,i5,a,i5,a,i6,a,i6,a)","  Using resolution mpol=",mpol,", ntor=",ntor,", N_theta=",N_theta,", N_phi=",N_phi,"."
   max_mpol_used = max(max_mpol_used,mpol)
   max_ntor_used = max(max_ntor_used,ntor)
 

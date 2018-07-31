@@ -28,4 +28,17 @@ subroutine qfm_surfaces_validate_input
      print *,"Error! Invalid constraint_option:",constraint_option
   end select
 
+  select case (trim(verbose_option))
+  case (verbose_option_detailed)
+     verbose = .true.
+  case (verbose_option_all)
+     verbose = .true.
+  case (verbose_option_proc0)
+     verbose = proc0
+  case (verbose_option_summary)
+     verbose = .false.
+  case default
+     print *,"Error! Invalid verbose_option:",verbose_option
+  end select
+
 end subroutine qfm_surfaces_validate_input

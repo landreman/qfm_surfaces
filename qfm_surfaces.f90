@@ -22,6 +22,11 @@ program qfm_surfaces
   if (proc0) then
      print "(a)"," -------------------------------------------------------------"
      print *,"Computing quadratic-flux-minimizing surfaces."
+     if (N_procs == 1) then
+        print "(a)"," Detected 1 processor."
+     else
+        print "(a,i4,a)"," Detected",N_procs," processors."
+     end if
   end if
   !call system_clock(tic,countrate)
   call cpu_time(start_time)

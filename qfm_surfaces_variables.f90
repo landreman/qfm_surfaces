@@ -25,6 +25,13 @@ module qfm_surfaces_variables
   ! "no_Z_component" = Force the theta = 0 line to have no Z component at phi = 0.
   ! "sigma_initial"  = Force sigma = sigma_initial at phi = 0.
 
+  character(len=*), parameter :: &
+       verbose_option_detailed = "detailed", &
+       verbose_option_all = "all", &
+       verbose_option_proc0 = "proc0", &
+       verbose_option_summary = "summary"
+  character(len=50) :: verbose_option = verbose_option_proc0
+
   character(len=200) :: output_filename
 
   integer :: N_procs, mpi_rank
@@ -61,9 +68,10 @@ module qfm_surfaces_variables
   real(dp), dimension(:,:,:), allocatable :: amnc_big
   real(dp), dimension(:,:), allocatable :: amnc
   integer, dimension(:), allocatable :: xm, xn
+  logical :: verbose
 
   namelist / qfm_surfaces / nfp, N_phi_axis, amplitude_m1, amplitude_m2, stellarator_symmetry, N_volumes, max_volume, max_mpol, max_ntor, min_accurate_quadratic_flux, &
-       min_N_theta, min_N_phi, N_iterations, N_line_search, Newton_tolerance, trust_region_factor
+       min_N_theta, min_N_phi, N_iterations, N_line_search, Newton_tolerance, trust_region_factor, verbose_option
 
 end module qfm_surfaces_variables
 

@@ -19,7 +19,7 @@ subroutine qfm_surfaces_Jacobian()
   residual = residual0
   state_vector = state_vector0
   call cpu_time(end_time)
-  print *,"Time to compute finite-difference Jacobian:",end_time-start_time
+  if (trim(verbose_option)==verbose_option_detailed) print *,"Time to compute finite-difference Jacobian:",end_time-start_time
 
 end subroutine qfm_surfaces_Jacobian
 
