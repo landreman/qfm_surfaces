@@ -6,7 +6,7 @@ subroutine qfm_surfaces_read_input
 
   integer :: numargs
   character(len=200) :: input_filename
-  integer :: fileUnit, didFileAccessWork, i
+  integer :: fileUnit, didFileAccessWork
   integer, parameter :: uninitialized = -9999
 
   ! getcarg is in LIBSTELL

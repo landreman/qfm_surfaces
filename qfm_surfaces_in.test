@@ -1,5 +1,5 @@
 &qfm_surfaces
- Newton_tolerance = 1.0d-14
+ !Newton_tolerance = 1.0d-14
  stellarator_symmetry=.t.
  N_phi_axis = 15
  !amplitude_m1 = 0.1d+0
@@ -12,4 +12,5 @@
 
  max_mpol = 16
  max_ntor = 9
+
 /
