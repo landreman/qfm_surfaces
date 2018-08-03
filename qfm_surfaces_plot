@@ -3,6 +3,7 @@
 import numpy as np
 from scipy.io import netcdf
 import sys, os
+import warnings
 
 print "Usage: "+__file__+" qfm_surfaces_out.*.nc"
 
@@ -27,6 +28,8 @@ areas = f.variables['areas'][()]
 print "amnc.shape:",amnc.shape
 
 f.close()
+
+mnmax = len(xm)
 
 phi = np.linspace(0,2*np.pi/nfp,4,endpoint=False)
 R = np.zeros(4)
@@ -91,11 +94,29 @@ plt.tight_layout()
 fig = plt.figure(figsize=(16,7))
 fig.patch.set_facecolor('white')
 
+numRows = 1
+numCols = 2
+
+plt.subplot(numRows,numCols,1)
 print "quadratic_flux_convergence.shape:",quadratic_flux_convergence.shape
 for j_volume in range(N_volumes):
     plt.semilogy(quadratic_flux_convergence[j_volume,:],'.-',label='volume '+str(j_volume))
 plt.legend(loc=0,fontsize=6)
 plt.xlabel('Resolution index')
 plt.title('Quadratic flux')
+
+plt.subplot(numRows,numCols,2)
+mpol = np.max(xm)
+ntor = np.max(xn)
+amnc_2D = np.zeros((mpol+1, ntor*2+1))
+for imn in range(mnmax):
+    amnc_2D[xm[imn],xn[imn]+ntor] = amnc[-1,imn]
+with warnings.catch_warnings(): # Block warning message that results from attempting to evaluate log(0)
+    warnings.simplefilter("ignore")
+    plt.imshow(np.log10(np.abs(amnc_2D)),interpolation='nearest',extent=[-ntor-0.5,ntor+0.5,mpol+0.5,-0.5])
+plt.title('log10(amnc) for outermost surface')
+plt.xlabel('n')
+plt.ylabel('m')
+plt.colorbar()
 
 plt.show()
