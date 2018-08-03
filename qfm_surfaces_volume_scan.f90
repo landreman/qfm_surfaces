@@ -11,6 +11,8 @@ subroutine qfm_surfaces_volume_scan
   integer :: mpi_status(MPI_STATUS_SIZE), send_data(1), recv_data(1), dummy(1)
   integer, parameter :: buffer_length = 100
   character(len=buffer_length) :: proc_assignments_string
+  real :: start_time, end_time
+
 
   if (N_volumes >= N_procs) then
      scan_index_min = 1 + (mpi_rank * N_volumes) / N_procs
@@ -71,10 +73,16 @@ subroutine qfm_surfaces_volume_scan
   if (proc0) print *,"Quadratic-flux-minimizing surfaces with the following volumes will be computed:"
   if (proc0) print "(*(es10.3))",volumes
 
+  call mpi_barrier(MPI_COMM_WORLD,ierr)
+  call cpu_time(start_time)
+
   !do j_volume = 1, N_volumes
   do j_volume = scan_index_min, scan_index_max
      call qfm_surfaces_single_volume(j_volume)
   end do
+
+  call cpu_time(end_time)
+  print "(a,i4,a,es10.3,a)"," proc",mpi_rank," finished, took",end_time-start_time," seconds."
 
   ! Send results to proc 0
   if (proc0) then
