@@ -239,28 +239,42 @@ subroutine qfm_surfaces_residual(Jacobian_column)
   shape_gradient = mean_curvature * Bnormal * Bnormal &
        + normal_vector_sign * (N_dot_B_cross_e_phi * d_Bnormal_d_theta + N_dot_e_theta_cross_B * d_Bnormal_d_phi) / (norm_normal * norm_normal)
 
-  residual = 0
-  integrand = (shape_gradient + state_vector(vector_size)) * norm_normal
-
   call cpu_time(segment_end_time)
   multiply_time = multiply_time + segment_end_time - segment_start_time
   call cpu_time(segment_start_time)
 
-  do imn = 1,mnmax
-     ! Need to add explicit theta + phi loops here
-     do iphi = 1, N_phi
-        do itheta = 1, N_theta
-           !!sinangle = sin(m*theta-n*phi) = sin(m*theta) * cos(n*phi) - cos(m*theta) * sin(n*phi)
-           !sinangle = sin_m_theta(itheta,m+1) * cos_n_phi(iphi,n+1) - cos_m_theta(itheta,m+1) * sin_n_phi(iphi,n+1)
-           !!cosangle = cos(m*theta-n*phi) = cos(m*theta) * cos(n*phi) + sin(m*theta) * sin(n*phi)
-           cosangle = cos_m_theta(itheta,xm(imn)) * cos_n_phi(iphi,xn(imn)) + sin_m_theta(itheta,xm(imn)) * sin_n_phi(iphi,xn(imn))
-           !angle = xm(imn) * theta2D - xn(imn) * phi2D;
-           !residual(imn) = dtheta * dphi * nfp * sum(sum(integrand .* cos(angle)));
-           residual(imn) = residual(imn) + integrand(itheta,iphi) * cosangle
-        end do
-     end do
-  end do
-  residual = residual * dtheta * dphi * nfp
+!!$  integrand = (shape_gradient + state_vector(vector_size)) * norm_normal
+!!$  residual = 0
+!!$  do imn = 1,mnmax
+!!$     do iphi = 1, N_phi
+!!$        do itheta = 1, N_theta
+!!$           !!sinangle = sin(m*theta-n*phi) = sin(m*theta) * cos(n*phi) - cos(m*theta) * sin(n*phi)
+!!$           !sinangle = sin_m_theta(itheta,m+1) * cos_n_phi(iphi,n+1) - cos_m_theta(itheta,m+1) * sin_n_phi(iphi,n+1)
+!!$           !!cosangle = cos(m*theta-n*phi) = cos(m*theta) * cos(n*phi) + sin(m*theta) * sin(n*phi)
+!!$           cosangle = cos_m_theta(itheta,xm(imn)) * cos_n_phi(iphi,xn(imn)) + sin_m_theta(itheta,xm(imn)) * sin_n_phi(iphi,xn(imn))
+!!$           !angle = xm(imn) * theta2D - xn(imn) * phi2D;
+!!$           !residual(imn) = dtheta * dphi * nfp * sum(sum(integrand .* cos(angle)));
+!!$           residual(imn) = residual(imn) + integrand(itheta,iphi) * cosangle
+!!$        end do
+!!$     end do
+!!$  end do
+!!$  residual = residual * dtheta * dphi * nfp
+!!$  print *,"Correct residual:",residual
+
+  integrand_transpose = transpose((shape_gradient + state_vector(vector_size)) * norm_normal)
+  residual_2D = (matmul(cos_n_phi_transpose,matmul(integrand_transpose,cos_m_theta)) &
+       +         matmul(sin_n_phi_transpose,matmul(integrand_transpose,sin_m_theta))) &
+       * (dtheta * dphi * nfp)
+  
+  !print *,"Residual_2D:"
+  !do imn = 1,ntor*2+1
+  !   print *,residual_2D(imn,:)
+  !end do
+
+  residual_1D = reshape(residual_2D, (/ (mpol+1)*(2*ntor+1) /))
+  !print *,"residual_1D:",residual_1D
+  residual(1:mnmax) = residual_1D(ntor+1:)
+  !print *,"residual, new method:",residual
 
   call cpu_time(segment_end_time)
   transform_time = transform_time + segment_end_time - segment_start_time

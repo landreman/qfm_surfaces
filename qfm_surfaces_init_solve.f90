@@ -35,6 +35,8 @@ subroutine qfm_surfaces_init_solve()
   allocate(cos_m_theta(N_theta,0:mpol))
   allocate(sin_n_phi(N_phi,-ntor:ntor))
   allocate(cos_n_phi(N_phi,-ntor:ntor))
+  allocate(sin_n_phi_transpose(-ntor:ntor,N_phi))
+  allocate(cos_n_phi_transpose(-ntor:ntor,N_phi))
   do m = 0, mpol
      do j = 1, N_theta
         sin_m_theta(j,m) = sin(m*theta(j))
@@ -47,6 +49,8 @@ subroutine qfm_surfaces_init_solve()
         cos_n_phi(j,n) = cos(n*nfp*phi(j))
      end do
   end do
+  sin_n_phi_transpose = transpose(sin_n_phi)
+  cos_n_phi_transpose = transpose(cos_n_phi)
 
   allocate(sin_phi(N_phi))
   allocate(cos_phi(N_phi))
@@ -131,6 +135,7 @@ subroutine qfm_surfaces_init_solve()
   allocate(d_Bnormal_d_theta(N_theta,N_phi))
   allocate(d_Bnormal_d_phi(N_theta,N_phi))
   allocate(integrand(N_theta,N_phi))
+  allocate(integrand_transpose(N_phi,N_theta))
   allocate(phi_copied(N_theta))
 
 
@@ -189,6 +194,8 @@ subroutine qfm_surfaces_init_solve()
   allocate(Jacobian(vector_size,vector_size))
   allocate(step_direction(vector_size))
   allocate(IPIV(vector_size))
+  allocate(residual_2D(ntor*2+1,mpol+1))
+  allocate(residual_1D((ntor*2+1)*(mpol+1)))
   state_vector = 0
   if (j_resolution==1) then
      state_vector(1) = sqrt(volume_target/(2*pi*(sum(R0)/N_phi)*pi))
