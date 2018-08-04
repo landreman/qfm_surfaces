@@ -119,4 +119,28 @@ plt.xlabel('n')
 plt.ylabel('m')
 plt.colorbar()
 
+###########################################
+###########################################
+
+fig = plt.figure(figsize=(16,7))
+fig.patch.set_facecolor('white')
+
+numCols = np.ceil(np.sqrt(N_volumes))
+numRows = np.ceil(N_volumes / numCols)
+
+for j_volume in range(N_volumes):
+    plt.subplot(numRows,numCols,j_volume+1)
+    amnc_2D = np.zeros((mpol+1, ntor*2+1))
+    for imn in range(mnmax):
+        amnc_2D[xm[imn],xn[imn]+ntor] = amnc[j_volume,imn]
+    with warnings.catch_warnings(): # Block warning message that results from attempting to evaluate log(0)
+        warnings.simplefilter("ignore")
+        plt.imshow(np.log10(np.abs(amnc_2D)),interpolation='nearest',extent=[-ntor-0.5,ntor+0.5,mpol+0.5,-0.5])
+    plt.title('log10(amnc) for surface '+str(j_volume+1))
+    plt.xlabel('n')
+    plt.ylabel('m')
+    plt.colorbar()
+
+plt.tight_layout()
+
 plt.show()

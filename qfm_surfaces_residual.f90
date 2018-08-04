@@ -10,6 +10,9 @@ subroutine qfm_surfaces_residual(Jacobian_column)
   logical :: computing_Jacobian
   integer :: itheta, iphi
   real(dp) :: this_amnc, d_cosangle_dtheta, d_cosangle_dphi, d2_cosangle_dtheta2, d2_cosangle_dphi2, d2_cosangle_dtheta_dphi
+  real :: segment_start_time, segment_end_time
+
+  call cpu_time(segment_start_time)
 
   !print "(a,i3)","Entering qfm_surfaces_residual. Jacobian_column=",Jacobian_column
   !print *,"state_vector:",state_vector
@@ -79,6 +82,10 @@ subroutine qfm_surfaces_residual(Jacobian_column)
   !print *,"Z0:",Z0
   !print *,"cos_theta:",cos_theta
 
+  call cpu_time(segment_end_time)
+  init_time = init_time + segment_end_time - segment_start_time
+  call cpu_time(segment_start_time)
+
   do imn = 1, mnmax_to_use
      if (computing_Jacobian) then
         m = xm(Jacobian_column)
@@ -131,6 +138,10 @@ subroutine qfm_surfaces_residual(Jacobian_column)
         end do
      end do
   end do
+
+  call cpu_time(segment_end_time)
+  compute_derivatives_time = compute_derivatives_time + segment_end_time - segment_start_time
+  call cpu_time(segment_start_time)
 
   !print *,"End of big imn loop"
   !print *,"R:",R
@@ -213,16 +224,28 @@ subroutine qfm_surfaces_residual(Jacobian_column)
   N_dot_B_cross_e_phi  = normal_vector_sign * (B_dot_e_theta * fundamental_form_G - B_dot_e_phi  * fundamental_form_F)
   N_dot_e_theta_cross_B = normal_vector_sign * (B_dot_e_phi  * fundamental_form_E - B_dot_e_theta * fundamental_form_F)
 
+  call cpu_time(segment_end_time)
+  multiply_time = multiply_time + segment_end_time - segment_start_time
+  call cpu_time(segment_start_time)
+
   ! Use BLAS here for speed?
   d_Bnormal_d_theta = matmul(ddtheta,Bnormal)
   d_Bnormal_d_phi  = transpose(matmul(ddphi,transpose(Bnormal)))
+
+  call cpu_time(segment_end_time)
+  matmul_time = matmul_time + segment_end_time - segment_start_time
+  call cpu_time(segment_start_time)
 
   shape_gradient = mean_curvature * Bnormal * Bnormal &
        + normal_vector_sign * (N_dot_B_cross_e_phi * d_Bnormal_d_theta + N_dot_e_theta_cross_B * d_Bnormal_d_phi) / (norm_normal * norm_normal)
 
   residual = 0
-
   integrand = (shape_gradient + state_vector(vector_size)) * norm_normal
+
+  call cpu_time(segment_end_time)
+  multiply_time = multiply_time + segment_end_time - segment_start_time
+  call cpu_time(segment_start_time)
+
   do imn = 1,mnmax
      ! Need to add explicit theta + phi loops here
      do iphi = 1, N_phi
@@ -239,7 +262,14 @@ subroutine qfm_surfaces_residual(Jacobian_column)
   end do
   residual = residual * dtheta * dphi * nfp
 
+  call cpu_time(segment_end_time)
+  transform_time = transform_time + segment_end_time - segment_start_time
+  call cpu_time(segment_start_time)
+
   ! Compute plasma volume using \int (1/2) R^2 dZ dphi.
   residual(vector_size) = 0.5d+0 * dtheta * dphi * nfp * sum(R * R * dZdtheta) - volume_target
+
+  call cpu_time(segment_end_time)
+  multiply_time = multiply_time + segment_end_time - segment_start_time
 
 end subroutine qfm_surfaces_residual

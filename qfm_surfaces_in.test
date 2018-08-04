@@ -1,5 +1,6 @@
 &qfm_surfaces
- verbose_option='summary'
+ !verbose_option='summary'
+ verbose_option='detailed'
 
  !Newton_tolerance = 1.0d-14
  stellarator_symmetry=.t.

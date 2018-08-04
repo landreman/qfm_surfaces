@@ -33,6 +33,7 @@ module qfm_surfaces_solver_variables
   integer :: iteration, j_line_search
   real(dp) :: residual_norm, initial_residual_norm, last_residual_norm, step_scale
   real :: start_time, end_time
+  real :: init_time, compute_derivatives_time, multiply_time, matmul_time, transform_time
   real(dp) :: this_area, this_quadratic_flux
 
   ! Variables needed by LAPACK:                                                                                            
