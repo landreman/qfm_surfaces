@@ -69,7 +69,11 @@ subroutine qfm_surfaces_volume_scan
   allocate(shape_convergence(N_resolutions,N_shape_convergence_locations,N_volumes))
   allocate(lambda(N_volumes))
 
-  volumes = [( max_volume * ((j_volume * 1.0d+0)/N_volumes)**2, j_volume = 1, N_volumes )]
+  if (min_volume <= 0) then
+     volumes = [( max_volume * ((j_volume * 1.0d+0)/N_volumes)**2, j_volume = 1, N_volumes )]
+  else
+     volumes = [( (sqrt(min_volume) + (sqrt(max_volume) - sqrt(min_volume)) * (j_volume - 1.0d+0) / (N_volumes - 1.0d+0) ) ** 2, j_volume = 1, N_volumes )]
+  end if
   if (proc0) print *,"Quadratic-flux-minimizing surfaces with the following volumes will be computed:"
   if (proc0) print "(*(es10.3))",volumes
 

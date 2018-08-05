@@ -51,6 +51,7 @@ module qfm_surfaces_variables
   real(dp) :: Newton_tolerance = 1.0d-13
   integer :: N_volumes = 1
   real(dp) :: max_volume = 1
+  real(dp) :: min_volume = 0
   integer :: max_mpol = 12
   integer :: max_ntor = 9
   integer :: min_N_theta = 32
@@ -72,7 +73,8 @@ module qfm_surfaces_variables
   real(dp) :: N_theta_mpol_ratio = 3
   real(dp) :: N_phi_ntor_ratio = 3
 
-  namelist / qfm_surfaces / nfp, N_phi_axis, amplitude_m1, amplitude_m2, stellarator_symmetry, N_volumes, max_volume, max_mpol, max_ntor, min_accurate_quadratic_flux, &
+  namelist / qfm_surfaces / nfp, N_phi_axis, amplitude_m1, amplitude_m2, stellarator_symmetry, N_volumes, max_volume, min_volume, &
+       max_mpol, max_ntor, min_accurate_quadratic_flux, &
        min_N_theta, min_N_phi, N_iterations, N_line_search, Newton_tolerance, trust_region_factor, verbose_option, &
        N_theta_mpol_ratio, N_phi_ntor_ratio
 
