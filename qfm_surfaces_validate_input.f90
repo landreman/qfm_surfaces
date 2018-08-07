@@ -5,7 +5,7 @@ subroutine qfm_surfaces_validate_input
   implicit none
 
   if (nfp<1) stop "Error! nfp must be positive."
-  if (nfp .ne. 3) stop "nfp must be 3 for now."
+  !if (nfp .ne. 3) stop "nfp must be 3 for now."
 
   select case (trim(resolution_option))
   case (resolution_option_fixed)

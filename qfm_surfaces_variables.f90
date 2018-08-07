@@ -37,7 +37,7 @@ module qfm_surfaces_variables
   integer :: N_procs, mpi_rank
   logical :: proc0
 
-  integer :: nfp = 3
+  integer :: nfp = 5
   integer :: N_phi_axis = 5
   real(dp) :: amplitude_m1 = 0.0
   real(dp) :: amplitude_m2 = 0.25d+0
