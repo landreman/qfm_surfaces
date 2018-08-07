@@ -49,7 +49,7 @@ subroutine qfm_surfaces_compute_B(N, R, phi, Z, B_R, B_phi, B_Z)
   B_R = amplitude_m2 * (((5/R6 + 5*R4)*Z*cosnphi)/10. &
        + ((30*R + 90*R9 - 120*R11)/(480*R5) - (-14 + 15*R2 + 9*R10 - 10*R12)/(96*R6) + ((-5/R6 + 5*R4)*Z*Z)/4)*sinnphi)
 
-  B_phi = 1 + amplitude_m2 * ((5*((-14 + 15*R2 + 9*R10 - 10*R12)/(480*R5) + ((1/R5 + R5)*Z*Z)/4)*cosnphi - ((-1/R5 + R5)*Z*sinnphi)/2)/R)
+  B_phi = (1 + amplitude_m2 * (5*((-14 + 15*R2 + 9*R10 - 10*R12)/(480*R5) + ((1/R5 + R5)*Z*Z)/4)*cosnphi - ((-1/R5 + R5)*Z*sinnphi)/2)) / R
 
   B_Z = amplitude_m2 * (((-1/R5 + R5)*cosnphi)/10 + ((1/R5 + R5)*Z*sinnphi)/2)
 
