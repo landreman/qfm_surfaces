@@ -48,7 +48,7 @@ module qfm_surfaces_variables
   real(dp) :: Newton_tolerance_axis = 1.0d-13
   integer :: N_iterations = 20
   integer :: N_line_search = 5
-  real(dp) :: Newton_tolerance = 1.0d-13
+  real(dp) :: Newton_tolerance = 1.0d-12
   integer :: N_volumes = 1
   real(dp) :: max_volume = 1
   real(dp) :: min_volume = 0
